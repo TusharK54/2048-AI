@@ -1,0 +1,66 @@
+{
+  "default": {
+    "tile": "#000000",
+    "text": "#ffffff"
+  },
+  "0": {
+    "tile": "#bbada0",
+    "text": "#bbada0"
+  },
+  "2": {
+    "tile": "#eee4da",
+    "text": "#453C33"
+  },
+  "4": {
+    "tile": "#ede0c8",
+    "text": "#453C33"
+  },
+  "8": {
+    "tile": "#f2b179",
+    "text": "#f9f6f2"
+  },
+  "16": {
+    "tile": "#F59563",
+    "text": "#f9f6f2"
+  },
+  "32": {
+    "tile": "#f67c5f",
+    "text": "#f9f6f2"
+  },
+  "64": {
+    "tile": "#f65e3b",
+    "text": "#f9f6f2"
+  },
+  "128": {
+    "tile": "#edcf72",
+    "text": "#f9f6f2"
+  },
+  "256": {
+    "tile": "#edcc61",
+    "text": "#f9f6f2"
+  },
+  "512": {
+    "tile": "#edc850",
+    "text": "#f9f6f2"
+  },
+  "1024": {
+    "tile": "#f2b179",
+    "text": "#ffffff"
+  },
+  "2048": {
+    "tile": "#f2b179",
+    "text": "#ffffff"
+  },
+  "4096": {
+    "tile": "#f2b179",
+    "text": "#ffffff"
+  },
+  "8192": {
+    "tile": "#f2b179",
+    "text": "#ffffff"
+  },
+  "16384": {
+    "tile": "#f2b179",
+    "text": "#ffffff"
+  }
+}
