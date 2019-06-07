@@ -1,6 +1,14 @@
 
-# color constants below
-BACKGROUND = '#bbada0'
+INFO_BACKGROUND         = '#faf8ef'
+TITLE_2048              = '#453C33'
+SCORE_BOX               = '#bbada0'
+SCORE_TITLE             = '#eee4da'
+DEFAULT_SIZE_BUTTON     = '#f59563'
+ENABLED_SIZE_BUTTON     = '#f65e3b'
+DEFAULT_STANDARD_BUTTON = '#8f7a66'
+ENABLED_STANDARD_BUTTON = 'brown'
+BUTTON_LABELS           = '#f9f6f2'
+TILE_GRID               = '#938578'
 
 TILES = {}
 TILES['default']    = {'tile': '#000000', 'text': '#ffffff'}
