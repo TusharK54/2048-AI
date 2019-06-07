@@ -11,12 +11,12 @@ class Window:
     with open(tile_colorfile) as f:
         tile_colors = load(f)
 
-    def __init__(self, size=500, pad=20, windowName='2048 Game', board=None, human=True):
+    def __init__(self, size=500, pad=20, windowName='2048 Game', human=True):
         self.size = size
         self.pad = pad
         self.human = True
         self.best = 0
-        self.board = Board() if board is None else board
+        self.board = Board()
 
         # Create canvas and info panel
         self.root = tk.Tk(className=windowName)
@@ -116,11 +116,7 @@ class Window:
 
 if __name__ == '__main__':
 
-    board = Board()
     game = Window()
-
-    board.spawn_tile()
-    board.spawn_tile()
 
     game.draw_board()
     game.root.mainloop()
