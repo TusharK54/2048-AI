@@ -2,6 +2,8 @@
 from board import Board
 from node import BoardNode
 
+from random import choice
+
 class MoveTree:
 
     def __init__(self, board:Board, iterations=5):
@@ -16,25 +18,34 @@ class MoveTree:
             self.leafs += leaf.generate_children()
 
     def get_best_move(self):
-        best_leaf = None
+        best_leafs = []
+        best_score = 0
         for leaf in self.leafs:
-            if best_leaf == None or best_leaf.score < leaf.score:
-                best_leaf = leaf
+            if leaf.score == best_score:
+                best_leafs.append(leaf)
+            elif leaf.score > best_score:
+                best_leafs = [leaf]
+                best_score = leaf.score
 
-        node = best_leaf
+        node = choice(best_leafs)
         while node.parent != self.root:
             node = node.parent
         return node.move
 
-    #TODO: FIX (not working)
-    def update_root(self, move):
-        branch_size = len(self.leafs) / len(self.root.children)
-
+    def update_board(self, move):
         # Change root of tree and update leafs
         for index in range(len(self.root.children)):
-            if self.root.children[index] == move:
+            if self.root.children[index].move == move:
                 self.root = self.root.children[index]
-                self.leafs = self.leafs[index*branch_size:(index+1)*branch_size]
+
+                leftmost_leaf, rightmost_leaf = self.root, self.root
+                while leftmost_leaf.children != []:
+                    leftmost_leaf = leftmost_leaf.children[0]
+                while rightmost_leaf.children != []:
+                    rightmost_leaf = rightmost_leaf.children[len(rightmost_leaf.children)-1]
+                left_index = self.leafs.index(leftmost_leaf)
+                right_index = self.leafs.index(rightmost_leaf, left_index)
+                self.leafs = self.leafs[left_index:right_index+1]
                 break
 
         # Recompute bottom layer of tree by getting children of current leafs
@@ -45,19 +56,27 @@ class MoveTree:
 
 if __name__ == '__main__':
 
+    import time
+
     board = Board(4)
     board.pretty_print()
 
     iterations = 4
     AI = MoveTree(board, iterations)
 
-    for i in range(1000):
-        print(i+1, end='th move:\n')
+    update_time = 0
+    for i in range(10):
+        
         next_move = AI.get_best_move()     
         board.move(next_move)
+
+        print(f'{i+1}th move - {len(AI.leafs)} leafs:')
         board.pretty_print()
 
-        #AI.update_root(next_move)
-        AI = MoveTree(board, iterations)
+        t = time.time_ns()
+        AI.update_board(next_move)
+        #AI = MoveTree(board, iterations)
+        t = time.time_ns() - t
+        update_time += t
 
-    print("DONE")
+    print(f'DONE in {update_time*10**-9} seconds')
