@@ -1,17 +1,24 @@
 import random
+from copy import deepcopy
 
 class Board:
 
+    UP    = 'up'
+    DOWN  = 'down'
+    LEFT  = 'left'
+    RIGHT = 'right'
+
     def __init__(self, size=4):
         self.size = size
-        self._spawn_4_probability = 0.1
         self.valid_last_move = False
+        self._spawn_4_probability = 0.1
         self._random_state = random.getstate()
         self.reset()
 
         # Track how many tiles each tile moved in the last turn for transition animation
         self._slidemap = [[0 for i in range(self.size)] for j in range(self.size)]
         self._mergemap = [[0 for i in range(self.size)] for j in range(self.size)]
+        self._spawnmap = [[0 for i in range(self.size)] for j in range(self.size)]
 
     def reset(self):
         self.tilemap = [[0 for i in range(self.size)] for j in range(self.size)]
@@ -22,9 +29,10 @@ class Board:
         board = Board()
         board.size = self.size
         board.score = self.score
-        board.tilemap = self.tilemap.copy()
-        board._slidemap = self._slidemap.copy()
-        board._mergemap = self._mergemap.copy()
+        board.tilemap = deepcopy(self.tilemap)
+        board._slidemap = deepcopy(self._slidemap)
+        board._mergemap = deepcopy(self._mergemap)
+        board._spawnmap = deepcopy(self._spawnmap)
         board._spawn_4_probability = self._spawn_4_probability
         return board
 
@@ -38,24 +46,28 @@ class Board:
 
     def move(self, direction: str):
         """Moves tiles in specified direction and spawns new tile if valid move"""
-        self.move_tiles(direction)
+        self._move_tiles(direction)
         if self.valid_last_move: self.spawn_tile()
 
     def spawn_tile(self):
+        self._spawnmap = [[0 for i in range(self.size)] for j in range(self.size)]
         clear_tiles = [(i,j) for i in range(self.size) for j in range (self.size) if self.tilemap[i][j] == 0]
+
         random.setstate(self._random_state)
         row, col = random.choice(clear_tiles)
         self.tilemap[row][col] = 2 if random.random() >= self._spawn_4_probability else 4
         self._random_state = random.getstate()
+
+        self._spawnmap[row][col] = 1
         return row, col
 
-    def move_tiles(self, direction: str):
-        """Moves tiles in specified direction: 'UP', 'DOWN', 'LEFT', 'RIGHT'"""
+    def _move_tiles(self, direction: str):
+        """Moves tiles in specified direction"""
         self.valid_last_move = False
-        if   direction.upper() == 'UP':     rotations = 3
-        elif direction.upper() == 'LEFT':   rotations = 0
-        elif direction.upper() == 'DOWN':   rotations = 1
-        elif direction.upper() == 'RIGHT':  rotations = 2
+        if   direction == Board.UP:     rotations = 3
+        elif direction == Board.LEFT:   rotations = 0
+        elif direction == Board.DOWN:   rotations = 1
+        elif direction == Board.RIGHT:  rotations = 2
         else: 
             print(f'{direction} not a valid direction')
             return
@@ -64,9 +76,9 @@ class Board:
         self._mergemap = [[0 for i in range(self.size)] for j in range(self.size)]
 
         # Rotate board to translate tiles left
-        self.tilemap = self._rotate_CW(rotations, matrix=self.tilemap)
-        self._slidemap = self._rotate_CW(rotations, matrix=self._slidemap)
-        self._mergemap = self._rotate_CW(rotations, matrix=self._mergemap)
+        self.tilemap = self._rotate_CW(self.tilemap, rotations)
+        self._slidemap = self._rotate_CW(self._slidemap, rotations)
+        self._mergemap = self._rotate_CW(self._mergemap, rotations)
 
         # Translate and combine tiles to the left
         self._collapse_left()
@@ -74,17 +86,17 @@ class Board:
         self._collapse_left()
 
         # Rotate board back to original orientation
-        self.tilemap = self._rotate_CCW(rotations, matrix=self.tilemap)
-        self._slidemap = self._rotate_CCW(rotations, matrix=self._slidemap)
-        self._mergemap = self._rotate_CCW(rotations, matrix=self._mergemap)
+        self.tilemap = self._rotate_CCW(self.tilemap, rotations)
+        self._slidemap = self._rotate_CCW(self._slidemap, rotations)
+        self._mergemap = self._rotate_CCW(self._mergemap, rotations)
 
-    def _rotate_CW(self, rotations, matrix: list):
+    def _rotate_CW(self, matrix: list, rotations):
         for _ in range(rotations):
             matrix = [[row[i] for row in matrix] for i in range(self.size)] # Transpose matrix along x = y
             matrix = [[row[j] for j in range(self.size-1,-1,-1)] for row in matrix] # Reverse rows of transpose
         return matrix
 
-    def _rotate_CCW(self, rotations, matrix: list):
+    def _rotate_CCW(self, matrix: list, rotations):
         for _ in range(rotations):
             matrix = [[matrix[i][j] for i in range(self.size-1,-1,-1)] for j in range(self.size-1,-1,-1)] # Transpose matrix along x = -y      
             matrix = [[row[j] for j in range(self.size-1,-1,-1)] for row in matrix] # Reverse rows of transpose
@@ -125,13 +137,13 @@ class Board:
         return points
 
     def pretty_print(self):
-        print('    Board  \t    Slide Map  \t    Merge Map    ')
+        print('  Tile Map  \t   Slide Map  \t   Merge Map  \t   Spawn Map ')
         for i in range(self.size):
-            print(self.tilemap[i], '\t', self._slidemap[i], '\t', self._mergemap[i])   
+            print(self.tilemap[i], '\t', self._slidemap[i], '\t', self._mergemap[i], '\t', self._spawnmap[i],)   
 
 if __name__ == '__main__':
     b = Board()
     b.spawn_tile()
     b.pretty_print()
-    b.move('UP')
+    b.move(Board.DOWN)
     b.pretty_print()
