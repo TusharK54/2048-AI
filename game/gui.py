@@ -11,11 +11,11 @@ class Window:
     def __init__(self, size=500):
         self.size = size
         self.human = True
-        self.best = 0
+        self.best = {3:0, 4:0, 5:0, 6:0}
         self.board = Board()
-        self.ai_lookahead = 3   # Number of moves the ai looks ahead (values >5 cause slow performance)
-        self.ai_speed = 5       # Time between ai moves in milliseconds
-
+        self.ai_lookahead = 4   # Number of moves the ai looks ahead (values >5 cause slow performance)
+        self.ai_speed = 3       # Time between ai moves in milliseconds
+        
         # Create canvas and info panel
         self.root = tk.Tk(className='2048 AI')
         self.root.resizable(False, False)
@@ -25,8 +25,9 @@ class Window:
         self.canvas.pack()
 
         # Create info panel widgets
-        self.title = tk.Text(self.info_panel, height=1, width=4, font=('Arial', 50, 'bold'), relief=tk.FLAT, fg=color.TITLE_2048, bg=color.INFO_BACKGROUND, pady=-8)
+        self.title = tk.Text(self.info_panel, height=1, width=4, font=('Arial', 50, 'bold'), relief=tk.FLAT, fg=color.TITLE, bg=color.INFO_BACKGROUND, pady=-8)
         self.title.insert(tk.INSERT, '2048')
+        self.title.config(state=tk.DISABLED)
         self.score_var = tk.StringVar()
         self.score_box = tk.Frame(self.info_panel, bd=0, bg=color.SCORE_BOX)
         self.score_label = tk.Label(self.score_box, text='SCORE', width=7, bd=0, fg=color.SCORE_TITLE, bg=color.SCORE_BOX, font=('Arial', 12, 'bold'))
@@ -86,20 +87,36 @@ class Window:
         self.root.bind('<Down>', self._keypress_down)
         self.root.bind('<Left>', self._keypress_left)
         self.root.bind('<Right>', self._keypress_right)
-        self.root.bind('<Return>', self._toggle_ai)
 
         self._new_game()
         self.root.mainloop()
 
     def _new_game(self):
         if not self.human: return
+        self.gameover = False
+        self.button2['state'] = tk.NORMAL
+        if hasattr(self, 'return_bind'):
+            self.root.unbind('<Return>', self.return_bind)
+        self.return_bind = self.root.bind('<Return>', self._toggle_ai)
+
         self.board.reset()
         self.ai = MoveTree(self.board, iterations=self.ai_lookahead)
         self._update_ui()
 
+    def _game_over(self):
+        self.gameover = True
+        self.button2['state'] = tk.DISABLED
+        self.root.unbind('<Return>', self.return_bind)
+        self.return_bind = self.root.bind('<Return>', lambda event: self._new_game())
+        if not self.human:
+            self._toggle_ai()
+
     def _move_board(self, direction):
         self.board.move(direction)
-        if self.best < self.board.score: self.best = self.board.score
+        if self.best[self.board.size] < self.board.score: 
+            self.best[self.board.size] = self.board.score
+        if not self.board._remaining_moves():
+            self._game_over()
         self._update_ui()
 
     def _update_ui(self):
@@ -108,7 +125,7 @@ class Window:
 
         # Update info panel
         self.score_var.set(str(self.board.score))
-        self.best_var.set(str(self.best))
+        self.best_var.set(str(self.best[self.board.size]))
 
         # Draw tiles on canvas
         self.canvas.delete("all")
@@ -127,6 +144,11 @@ class Window:
                 
                 self.canvas.create_rectangle(j*tile_size+tile_border, i*tile_size+tile_border, (j+1)*tile_size, (i+1)*tile_size, fill=tile_color['tile'], width=0)
                 self.canvas.create_text(j*tile_size+(tile_size+tile_border)/2, i*tile_size+(tile_size+tile_border)/2, text=tile, justify='center', width=tile_size, font=('Helvetica Neue', int(tile_text_size), 'bold'), fill=tile_color['text'])
+
+        if self.gameover:
+            self.canvas.create_rectangle(0, 0, self.size, self.size, width=0, fill=color.GAME_OVER_STIPPLE, stipple='gray50')
+            self.canvas.create_text(self.size/2, self.size/2-25, text='Game Over', font=('Arial', 50, 'bold'), fill=color.TITLE)
+            self.canvas.create_text(self.size/2, self.size/2+25, text='Press [ENTER] to play again', font=('Helvetica Neue', 15, 'bold'), fill=color.TITLE)
 
     def _ai_play(self):
         move = self.ai.get_best_move()
