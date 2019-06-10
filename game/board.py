@@ -1,6 +1,5 @@
 
 import random
-from copy import deepcopy
 
 class Board:
 
@@ -16,24 +15,17 @@ class Board:
         self._random_state = random.getstate()
         self.reset()
 
-        # Track how many tiles each tile moved in the last turn for transition animation
-        self._slidemap = [[0 for i in range(self.size)] for j in range(self.size)]
-        self._mergemap = [[0 for i in range(self.size)] for j in range(self.size)]
-        self._spawnmap = [[0 for i in range(self.size)] for j in range(self.size)]
-
     def reset(self):
         self.tilemap = [[0 for i in range(self.size)] for j in range(self.size)]
         self.score = 0
+        self.game_over = False
         self.spawn_tile()
 
     def copy(self):
         board = Board()
         board.size = self.size
         board.score = self.score
-        board.tilemap = deepcopy(self.tilemap)
-        board._slidemap = deepcopy(self._slidemap)
-        board._mergemap = deepcopy(self._mergemap)
-        board._spawnmap = deepcopy(self._spawnmap)
+        board.tilemap = [[x for x in row] for row in self.tilemap]
         board._spawn_4_probability = self._spawn_4_probability
         return board
 
@@ -51,16 +43,22 @@ class Board:
         if self.valid_last_move: self.spawn_tile()
 
     def spawn_tile(self):
-        self._spawnmap = [[0 for i in range(self.size)] for j in range(self.size)]
         clear_tiles = [(i,j) for i in range(self.size) for j in range (self.size) if self.tilemap[i][j] == 0]
 
         random.setstate(self._random_state)
         row, col = random.choice(clear_tiles)
         self.tilemap[row][col] = 2 if random.random() >= self._spawn_4_probability else 4
         self._random_state = random.getstate()
-
-        self._spawnmap[row][col] = 1
         return row, col
+
+    def _remaining_moves(self):
+        clear_tiles = [(i,j) for i in range(self.size) for j in range (self.size) if self.tilemap[i][j] == 0]
+        if len(clear_tiles) > 0: return True
+        for move in [Board.UP, Board.DOWN, Board.LEFT, Board.RIGHT]:
+            board = self.deterministic_copy()
+            board.move(move)
+            if board.valid_last_move: return True
+        return False
 
     def _move_tiles(self, direction: str):
         """Moves tiles in specified direction"""
@@ -72,14 +70,9 @@ class Board:
         else: 
             print(f'{direction} not a valid direction')
             return
-        
-        self._slidemap = [[0 for i in range(self.size)] for j in range(self.size)]
-        self._mergemap = [[0 for i in range(self.size)] for j in range(self.size)]
 
         # Rotate board to translate tiles left
         self.tilemap = self._rotate_CW(self.tilemap, rotations)
-        self._slidemap = self._rotate_CW(self._slidemap, rotations)
-        self._mergemap = self._rotate_CW(self._mergemap, rotations)
 
         # Translate and combine tiles to the left
         self._collapse_left()
@@ -88,8 +81,6 @@ class Board:
 
         # Rotate board back to original orientation
         self.tilemap = self._rotate_CCW(self.tilemap, rotations)
-        self._slidemap = self._rotate_CCW(self._slidemap, rotations)
-        self._mergemap = self._rotate_CCW(self._mergemap, rotations)
 
     def _rotate_CW(self, matrix: list, rotations):
         for _ in range(rotations):
@@ -113,9 +104,6 @@ class Board:
                     for k in range(j, self.size-1, 1):
                         self.tilemap[i][k] = self.tilemap[i][k+1]
                         if self.tilemap[i][k] != 0:
-                            self._slidemap[i][k] += self._slidemap[i][k+1] + 1
-                            self._slidemap[i][k+1] = 0
-                            self._mergemap[i][k] = self._mergemap[i][k+1]
                             self.valid_last_move = True
                             empty = False
                     self.tilemap[i][self.size-1] = 0
@@ -130,20 +118,18 @@ class Board:
             for j in range(self.size-1):
                 if self.tilemap[i][j] == self.tilemap[i][j+1] and self.tilemap[i][j] != 0:
                     self.tilemap[i][j], self.tilemap[i][j+1] = self.tilemap[i][j]*2, 0
-                    self._slidemap[i][j] += self._slidemap[i][j+1] + 1
-                    self._slidemap[i][j+1] = 0
-                    self._mergemap[i][j] = 1
                     self.valid_last_move = True
                     points += self.tilemap[i][j]
         return points
 
     def pretty_print(self):
-        print('  Tile Map  \t   Slide Map  \t   Merge Map  \t   Spawn Map ')
+        print('*'*20)
         for i in range(self.size):
-            print(self.tilemap[i], '\t', self._slidemap[i], '\t', self._mergemap[i], '\t', self._spawnmap[i],)   
+            print(self.tilemap[i])
+        print('*'*20)
 
 if __name__ == '__main__':
-    b = Board()
+    b = Board(4)
     b.spawn_tile()
     b.pretty_print()
     b.move(Board.DOWN)
