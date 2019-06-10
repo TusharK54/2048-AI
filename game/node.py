@@ -15,14 +15,14 @@ class BoardNode:
         self.children = []
         for move in [Board.UP, Board.DOWN, Board.LEFT, Board.RIGHT]:
             child = BoardNode(self.board.deterministic_copy())
-            child.set_parent(self)
+            child._set_parent(self)
             child.board.move(move)
             child.move = move
             if child.board.valid_last_move:
                 self.children.append(child)
-        return self.children
+        return self.children            
 
-    def set_parent(self, parent):
+    def _set_parent(self, parent):
         self.parent = parent
         self.depth = parent.depth + 1
 
