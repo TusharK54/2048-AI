@@ -1,4 +1,5 @@
 # 2048 AI
+### Introduction
 The aim of this project was twofold - first, to replicate as closely as possible the original 2048 game and its mechanics, and second, to build an AI that could play the game and beat it consistently. I wrote everything in Python 3.7 and completed this project in about 2 weeks.
 
 
@@ -27,6 +28,8 @@ The search tree is generated until a certain specified *depth* is reached. The d
 The image below depicts a search tree with a depth of 3 and the evaluation score of each of the leafs:
 
 <img src="/readme-resources/2048%20Search%20Tree%20(3).jpg">
+
+Note that in 2048, a tile is spawned in a random spot on the board after every move. Normally, this would be a significant source of error since the search tree would not accuratly reflect future game states, and this problem would compound exponentially for each layer below the root. To address this problem, each node in the search tree inherits the random state of its parent so it can generate its children deterministically and spawn new tiles in the same positions they would spawn in during the game. This way, we can ensure that nodes in the search tree are completley accurate representations of future game states.
 
 ##### Evaluation Function
 Once a search tree has been generated, the AI can iterate over and pick the best future game state among the bottom layer of leaves in the tree. It can then simply walk up the tree until it reaches a node whose parent is the root, and return the move attribute of this node. However, to compare game state, there needs to be some way of quantifying the strength of each board. This is done with an *evaluation function*. 
