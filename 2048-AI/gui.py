@@ -13,7 +13,7 @@ class Window:
         self.human = True
         self.best = {3:0, 4:0, 5:0, 6:0}
         self.board = Board()
-        self.ai_lookahead = 4   # Number of moves the ai looks ahead (values >5 cause slow performance)
+        self.ai_lookahead = 5   # Number of moves the ai looks ahead (values >5 cause slow performance)
         self.ai_speed = 3       # Time between ai moves in milliseconds
         
         # Create canvas and info panel

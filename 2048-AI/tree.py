@@ -29,11 +29,12 @@ class MoveTree:
         best_leafs = []
         best_score = 0
         for leaf in self.leafs:
-            if leaf.score == best_score:
+            leaf_score = leaf.get_evaluation_score()
+            if leaf_score == best_score:
                 best_leafs.append(leaf)
-            elif leaf.score > best_score:
+            elif leaf_score > best_score:
                 best_leafs = [leaf]
-                best_score = leaf.score
+                best_score = leaf_score
 
         node = choice(best_leafs)
         while node.parent != self.root:

@@ -9,7 +9,6 @@ class BoardNode:
         self.move = None
         self.parent = None
         self.children = []
-        self.score = self._get_heuristic_score()
 
     def generate_children(self) -> list:
         self.children = []
@@ -26,7 +25,7 @@ class BoardNode:
         self.parent = parent
         self.depth = parent.depth + 1
 
-    def _get_heuristic_score(self) -> int:
+    def get_evaluation_score(self) -> int:
         score = self.board.score
         clear_tiles = 0
         best_tile = 0
