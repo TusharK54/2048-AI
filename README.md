@@ -1,7 +1,10 @@
 # 2048 AI
 ### Introduction
-The aim of this project was twofold - first, to replicate as closely as possible the original 2048 game and its mechanics, and second, to build an AI that could play the game and beat it consistently. I wrote everything in Python 3.7 and completed this project in about 2 weeks.
+The aim of this project was twofold - first, to replicate as closely as possible the original 2048 game and its mechanics, and second, to build an AI that could play the game and beat it on its own consistently. I wrote everything in Python 3.7 and completed this project in about 2 weeks.
 
+### The Game
+##### Gameplay (from Wikipedia)
+2048 is played on a (typically 4x4) grid, with numbered tiles that slide when a player moves them using the four arrow keys. Every turn, a new tile will randomly spawn in an empty spot on the board with a value of either 2 or 4. Tiles slide as far as possible in the chosen direction until they are stopped by either another tile or the edge of the grid. If two tiles of the same number collide while moving, they will merge into a tile with the total value of the two tiles that collided. The resulting tile cannot merge with another tile again in the same move. The user's score starts at zero, and is increased whenever two tiles combine, by the value of the new tile. When the player can no longer make a move, the game is over.
 
 ### The AI
 <img src="/readme-resources/2048-AI-3x3-grid.gif" width="200">   <img src="/readme-resources/2048-AI-4x4-grid.gif" width="200">   <img src="/readme-resources/2048-AI-5x5-grid.gif" width="200">   <img src="/readme-resources/2048-AI-6x6-grid.gif" width="200">
@@ -25,14 +28,14 @@ The children of any given node *x* are all the possible nodes with boards that c
 
 The search tree is generated until a certain specified *depth* is reached. The depth quantifies how many moves ahead the AI can 'see', so a higher depth corresponds to a smarter AI, but also causes slower performance. For reference, the depth of the AI in the gifs above is 4. From observations, it seems that a search tree with a depth of 4 is usually adequate to beat the game quickly on boards where a 2048 tile is possible (i.e. 4x4 boards and larger).
 
+Note that a new tile will randomly spawn in an empty spot on the board after every move. Normally, this would be a significant source of error since the search tree would not accuratly reflect future game states, and this problem would compound exponentially for each layer below the root. To address this problem, each node in the search tree inherits the random state of its parent so it can generate its children deterministically and spawn new tiles in the same positions they would spawn in during the game. This way, we can ensure that nodes in the search tree are completley accurate representations of future game states.
+
 The image below depicts a search tree with a depth of 3 and the evaluation score of each of the leafs:
 
 <img src="/readme-resources/2048%20Search%20Tree%20(3).jpg">
 
-Note that in 2048, a tile is spawned in a random spot on the board after every move. Normally, this would be a significant source of error since the search tree would not accuratly reflect future game states, and this problem would compound exponentially for each layer below the root. To address this problem, each node in the search tree inherits the random state of its parent so it can generate its children deterministically and spawn new tiles in the same positions they would spawn in during the game. This way, we can ensure that nodes in the search tree are completley accurate representations of future game states.
-
 ##### Evaluation Function
-Once a search tree has been generated, the AI can iterate over and pick the best future game state among the bottom layer of leaves in the tree. It can then simply walk up the tree until it reaches a node whose parent is the root, and return the move attribute of this node. However, to compare game state, there needs to be some way of quantifying the strength of each board. This is done with an *evaluation function*. 
+Once a search tree has been generated, the AI can iterate over and pick the best future game state among the bottom layer of leaves in the tree. It can then simply walk up the tree until it reaches a node whose parent is the root, and return the move attribute of this node. However, to compare game states, there needs to be some way of quantifying the strength of each board. This is done with an *evaluation function*. 
 
 The goal of an evaluation function is to take any given game state and produce a numerical value that represents its strength. The evaluation function must take into account all the properties that contribute to a good game state, since these are the properties that will be maximized over time. There are three primary properties of each board we want to maximize:
 
@@ -45,4 +48,4 @@ The evaluation function currently used by the AI simply multiplies the above val
 `evaluation(board) = board.score * board.largest_tile * board.clear_tiles`
 
 ##### Updating the Tree
-After the AI performs a move in the game, the search tree must be updated with the new game state at its root. The simple solution is to generate a new search tree from the new game state. However, this is an expensive operation, especially for large trees. To save time, we simply change the pointer to the root to the appropraiate child, keep only the leaves in the bottom layer of the tree that can be reached from this new root, and generate their children to maintain the same depth of the tree.
+After the AI performs a move in the game, the search tree must be updated with the new game state at its root. The simple solution is to generate a new search tree from the new game state. However, this is an expensive operation, especially for large trees. To save time, we simply change the pointer to the root to the appropraiate child, keep only the leaves in the bottom layer of the tree that can be reached from this new root, and generate their children to maintain the depth of the tree. After some testing, I found that this small optimization speeds up the entire operation by about 25%.
