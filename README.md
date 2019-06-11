@@ -24,6 +24,10 @@ The children of any given node *x* are all the possible nodes with boards that c
 
 The search tree is generated until a certain specified *depth* is reached. The depth quantifies how many moves ahead the AI can 'see', so a higher depth corresponds to a smarter AI, but also causes slower performance. For reference, the depth of the AI in the gifs above is 4. From observations, it seems that a search tree with a depth of 4 is usually adequate to beat the game quickly on boards where a 2048 tile is possible (i.e. 4x4 boards and larger).
 
+The image below depicts a search tree with a depth of 3 and the evaluation score of each of the leafs:
+
+<img src="/readme-resources/2048%20Search%20Tree%20(3).jpg">
+
 ##### Evaluation Function
 Once a search tree has been generated, the AI can iterate over and pick the best future game state among the bottom layer of leaves in the tree. It can then simply walk up the tree until it reaches a node whose parent is the root, and return the move attribute of this node. However, to compare game state, there needs to be some way of quantifying the strength of each board. This is done with an *evaluation function*. 
 
