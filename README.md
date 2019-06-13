@@ -41,11 +41,27 @@ The goal of an evaluation function is to take any given game state and produce a
 
 - **score** - the current score of the game, maximized by combining larger tiles
 - **largest tile** - the largest tile on the board, maximized by creating a new largest tile
-- **clear tiles** - the number of open spaces on the board, maximized by combining multiple tiles
+- **empty tiles** - the number of open spaces on the board, maximized by combining multiple tiles
 
 The evaluation function currently used by the AI simply multiplies the above values together:
 
-`evaluation(board) = board.score * board.largest_tile * board.clear_tiles`
+`evaluation(board) = board.score * board.largest_tile * board.empty_tiles`
 
 ##### Updating the Tree
 After the AI performs a move in the game, the search tree must be updated with the new game state at its root. The simple solution is to generate a new search tree from the new game state. However, this is an expensive operation, especially for large trees. To save time, we simply change the pointer to the root to the appropraiate child, keep only the leaves in the bottom layer of the tree that can be reached from this new root, and generate their children to maintain the depth of the tree. After some testing, I found that this small optimization speeds up the entire operation by about 25%.
+
+### Future Improvements
+While the AI is fully capable of beating the game, there is still much room for improvement. Below are some areas that can be further optimized to enhance the performance of the AI:
+
+##### Evaluation Function
+The evaluation function is the driving force of the decision making process of the AI. It is how it distinguishes between bad moves, good moves, and great moves. Thus, the AI is really only as good as its evaluation function. The current evaluation function suffices because it forces the AI to maximize certain properties of the board, specifically the score, largest tile, and number of empty tiles. However, we can add weights to these properties to give them different priorities with which the AI maximizes them. We can also add more properties that we want to maximize, or even minimize. For example, we might want to minimize the number of duplicate tiles, which could possibly cause the AI to combine tiles faster and more efficiently. 
+
+Now a really good evaluation function would not just take into account the value of tiles on the board, but also their positions. This could be implemented by multiplying each tile with a distinct weight specified by some *position matrix* that is the same size as the board. For example, a position matrix with a weight of 10 on the edge tiles and a weight of 5 elsewehere would favor keeping the largest tiles on the edges and out of the center - a great 2048 strategy. In fact, this is a strategy programmed into AIs that play chess.
+
+There really are no limits to the creativity involved in writing an evaluation function. And while a simple evaluation can still get a very high score, enhancing it is one of the most surefire (and fun) ways to improve the AI. 
+
+##### Search Tree Pruning
+The primary limiting factor preventing the AI from playing a perfect game every time is the depth of the search tree. As of right now, I've found a depth of 4 to be ideal in terms of both speed and performance. An AI with a shorter search tree will run much faster but achieve much lower scores, while an AI with a longer search tree will play much better but take far too long. The reason for this is because each additional layer is about 4 times larger than the previous layer. Thus the tree grows exponentially, with each layer at a depth of *n* containing roughly 4<sup>*n-1*</sup> nodes. 
+
+If we could add layers to the tree without significantly increasing the size of each layer, we would be able to create a better AI that can 'see' more moves ahead without compromising on speed. This is where pruning comes in. 
+//TODO: FINISH
