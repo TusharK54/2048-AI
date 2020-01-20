@@ -13,6 +13,8 @@ class Application(QueueManager):
 
     def __init__(self):
         root = tk.Tk()
+
+
         self.model = ControlModel()
 
         QueueManager.__init__(self)
@@ -69,8 +71,8 @@ class Application(QueueManager):
 
         elif event == 'trigger ai':
             if self.model.get_ai() and not self.model.get_game_over():
-                state = self.model.get_board()
-                self.ai_queue.put('make move', state)
+                model = self.model.get_board()
+                self.ai_queue.put('make move', model)
 
         elif event == 'ai move':
             self.queue('move', data)

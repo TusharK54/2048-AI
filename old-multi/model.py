@@ -3,20 +3,20 @@ import tkinter as tk
 import numpy as np
 import abc
 
-from game.game import Move, Board
+from game.game import Move, Game
 
 class ViewModel(abc.ABC):
     """A mostly read-only model for the view."""
 
-    def __init__(self, board: Board=None):
+    def __init__(self, board: Game=None):
         self.board = board
         self.size = tk.IntVar()
         self.score = tk.IntVar()
         self.best = tk.IntVar()
         self.ai = False
 
-    def get_board(self) -> Board:
-        """Return a `Board` object with a copy of the state of the board."""
+    def get_board(self) -> Game:
+        """Return a `Game` object with a copy of the state of the board."""
         return self.board.copy()
 
     def get_size_var(self) -> tk.IntVar:
@@ -54,8 +54,8 @@ class ControlModel(ViewModel):
         self.new_game()
 
     def new_game(self, size: int=None):
-        default_board = Board() if self.size.get() == 0 else Board(self.size.get())
-        self.board = default_board if size is None else Board(size)
+        default_board = Game() if self.size.get() == 0 else Game(self.size.get())
+        self.board = default_board if size is None else Game(size)
         self.update_vars()
 
     def update_vars(self):

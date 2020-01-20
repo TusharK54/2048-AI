@@ -9,21 +9,14 @@ from abc import ABC, abstractmethod
 from queue import Queue
 from threading import Thread
 
-class Message(object):
-
-    def __init__(self, sender, event, data):
-        self.sender = senderwe
-        self.event = event
-        self.data = data
-
 class MessageQueue(Queue):
 
     def __init__(self):
         Queue.__init__(self)
 
-    def put(self, sender_id, event, data=None):
+    def put(self, event, data=None):
         """Add an event, optionally with some associated data, to the end of the queue."""
-        super().put((sender_id, event, data))
+        super().put((event, data))
 
 class QueueManager(ABC):
 
@@ -37,12 +30,12 @@ class QueueManager(ABC):
         return self.message_queue
 
     def launch_thread(self):
-        """Launch a worker thread to process events in the message queue."""
+        """Launch a worker thread to handle events in the message queue."""
         worker = Thread(target=self._queue_handler, daemon=True)
         worker.start()
 
     def kill_thread(self):
-        """Add an event to the message queue that will kill the worker thread once it is processed.""" 
+        """Add an event to the message queue that will kill the worker thread once it is handled.""" 
         self.message_queue.put(None)
 
     def get_id(self) -> str:
@@ -54,7 +47,7 @@ class QueueManager(ABC):
         pass
 
     def _queue_handler(self):
-        """Continually process events from the message queue until `None` is encountered."""
+        """Continually handle events from the message queue until `None` is encountered."""
         while True:
             try:
                 item = self.message_queue.get()

@@ -1,5 +1,5 @@
 
-from game.game import Move, Board
+from game.game import Move, Game
 from abc import ABC, abstractmethod
 
 class Player(ABC):
@@ -8,7 +8,7 @@ class Player(ABC):
         pass
 
     @abstractmethod
-    def get_move(self, board: Board) -> Move:
+    def get_move(self, board: Game) -> Move:
         """Return the move the player makes in the given `state`.
         Not guarunteed to be a valid move."""
         pass

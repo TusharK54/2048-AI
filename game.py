@@ -6,7 +6,7 @@ import random
 class Move(Enum):
     UP, LEFT, DOWN, RIGHT = 3, 0, 1, 2
 
-class Board(object):
+class Game(object):
 
     def __init__(self, size=4, copy=None):
         if copy is None:
@@ -24,7 +24,7 @@ class Board(object):
 
     def copy(self, matrix=None):
         """Return a deep copy of this object."""
-        new = Board(copy=self)
+        new = Game(copy=self)
         if matrix is not None:
             new.matrix = matrix
         return new
@@ -71,7 +71,7 @@ class Board(object):
         return True
 
     def next_move(self, move: Move):
-        """Return a copy of the next board without affecting this one."""
+        """Return a copy of the next game state without affecting this one."""
         new_matrix = self.slide_matrix(move)
         copy = self.copy(matrix=new_matrix)
         copy.spawn_tile()
@@ -123,7 +123,21 @@ class Board(object):
         return str(self.matrix)
 
 if __name__ == '__main__':
-    a = Board()
-    b = a.copy()
+    game = Game()
 
-    assert a == b, (a==b)
+    while not game.game_over():
+        print(game)
+        move = input('Input next move [WASD]: ').lower()
+        if move == 'w':
+            game.make_move(Move.UP)
+        elif move == 'a':
+            game.make_move(Move.LEFT)
+        elif move == 's':
+            game.make_move(Move.DOWN)
+        elif move == 'd':
+            game.make_move(Move.RIGHT)
+        else:
+            print('Please use the WASD keys')
+
+    print('\nGame Over!')
+    print('Final Score:', game.get_score())

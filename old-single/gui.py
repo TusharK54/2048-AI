@@ -2,7 +2,7 @@ import tkinter as tk
 from json import load
 from math import log
 
-from board import Board
+from board import Game
 from tree import MoveTree
 import color_constants as color
 
@@ -12,7 +12,7 @@ class Window:
         self.size = size
         self.human = True
         self.best = {3:0, 4:0, 5:0, 6:0}
-        self.board = Board()
+        self.board = Game()
         self.ai_lookahead = 4               # Number of moves the ai looks ahead (values >5 cause slow performance)
         self.ai_speed = self.ai_lookahead   # Time between ai moves in milliseconds
         
@@ -44,7 +44,7 @@ class Window:
         self.size_buttons = []
         def change_size(new_size):
             if self.board.size == new_size or not self.human: return
-            self.board = Board(size=new_size)
+            self.board = Game(size=new_size)
             self._new_game()
             for button in self.size_buttons:
                 if button['text'] == str(new_size):
@@ -176,19 +176,19 @@ class Window:
 
     def _keypress_up(self, event):
         if self.human:
-            self._move_board(Board.UP)
+            self._move_board(Game.UP)
 
     def _keypress_down(self, event):
         if self.human: 
-            self._move_board(Board.DOWN)
+            self._move_board(Game.DOWN)
 
     def _keypress_left(self, event):
         if self.human: 
-            self._move_board(Board.LEFT)
+            self._move_board(Game.LEFT)
 
     def _keypress_right(self, event):
         if self.human: 
-            self._move_board(Board.RIGHT)
+            self._move_board(Game.RIGHT)
 
 if __name__ == '__main__':
 

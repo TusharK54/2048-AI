@@ -1,9 +1,9 @@
 
-from board import Board
+from board import Game
 
 class BoardNode:
 
-    def __init__(self, board: Board):
+    def __init__(self, board: Game):
         self.board = board
         self.depth = 0
         self.move = None
@@ -12,7 +12,7 @@ class BoardNode:
 
     def generate_children(self) -> list:
         self.children = []
-        for move in [Board.UP, Board.DOWN, Board.LEFT, Board.RIGHT]:
+        for move in [Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT]:
             child = BoardNode(self.board.deterministic_copy())
             child._set_parent(self)
             child.board.move(move)
@@ -38,7 +38,7 @@ class BoardNode:
         return score * clear_tiles * best_tile
 
 if __name__ == '__main__':
-    board = Board()
+    board = Game()
     node = BoardNode(board)
 
     node.generate_children()
