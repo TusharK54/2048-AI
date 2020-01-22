@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 class Move(Enum):
-    UP, LEFT, DOWN, RIGHT = 3, 0, 1, 2
+    UP, DOWN, LEFT, RIGHT = 3, 1, 0, 2
 
 class GameState(object):
 

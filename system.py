@@ -5,7 +5,7 @@ from time import sleep # TODO: remove
 
 from pub_sub import Publisher
 
-from ai import BasePlayer, RandomPlayer
+from ai import Base, Dummy, Dummy2
 from game import Move, GameState
 from gui import View
 
@@ -34,9 +34,9 @@ class KeyboardManager(Publisher):
 
 class GameManager(Publisher):
 
-    def __init__(self, game: GameState=None):
+    def __init__(self, game: GameState):
         Publisher.__init__(self)
-        self.game_state = game if game is not None else GameState()
+        self.game_state = game
 
     def handle_event(self, event, data):
         if event == 'restart':              # data contains size
@@ -59,62 +59,43 @@ class GameManager(Publisher):
 
 class AIManager(Publisher):
 
-    def __init__(self):
+    def __init__(self, ai: Base):
         Publisher.__init__(self)
-        self.ai : BasePlayer = None
+        self.ai_state = ai
 
     def handle_event(self, event, data):
-        if event == 'update game':
-            pass
-        elif event == 'enable ai':
-            self.launch_ai(data)
-        elif event == 'disable ai':
-            self.kill_ai()
-        elif event == 'select ai':
-            pass
-
+        if event == 'new game':             # data contains new game state
+            self.ai_state = Dummy2(data) # TODO: factory method
+            self.publish_event('new ai', self.ai_state)
+        
         else:
             raise Exception
-
-    def launch_ai(self, game: GameState):
-        self.ai = RandomPlayer(game) #TODO: factory method
-
-        worker = Thread(target=self.run_ai, daemon=True)
-        worker.start()
-
-    def run_ai(self):
-        while self.ai is not None:
-            if self.ai.get_game_state().game_over():
-                self.publish_event('view disable ai')
-                break
-
-            move = self.ai.make_next_move()
-            self.publish_event('ai move', move)
-            self.publish_event('update ai', self.ai)
-
-    def kill_ai(self):
-        self.ai = None
 
 class Application(object):
 
     def __init__(self):
         game = GameState()
+        ai = Dummy(game) # TODO: factory method
 
         # Initialize tkinter thread
         root = tk.Tk()
 
         # Initialize distributed components
-        self.control = GameManager(game)
         self.keyboard = KeyboardManager(root)
-        self.view = View(game, root)
+        self.game_control = GameManager(game)
+        self.ai_control = AIManager(ai)
+        self.view = View(game, ai, root)
 
         # Set up subscriptions
-        self.control.subscribe(self.keyboard)
-        self.control.subscribe(self.view)
-        self.view.subscribe(self.control)
+        self.game_control.subscribe(self.keyboard)
+        self.game_control.subscribe(self.view)
+        self.ai_control.subscribe(self.game_control)
+        self.view.subscribe(self.game_control)
+        self.view.subscribe(self.ai_control)
 
     def launch(self):
-        self.control.launch_thread()
+        self.game_control.launch_thread()
+        self.ai_control.launch_thread()
         self.view.launch_thread() # NOTE: blocking thread
 
 if __name__ == '__main__':

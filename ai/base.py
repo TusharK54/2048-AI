@@ -1,9 +1,8 @@
 
-from threading import Thread
 from abc import ABC, abstractmethod
 from random import choice
 
-from game import Move, GameState
+from .game import Move, GameState
 
 class Base(ABC):
 
@@ -44,19 +43,3 @@ class Base(ABC):
     def __str__(self) -> str:
         """Return the name of this AI."""
         pass
-        
-class Dummy(Base):
-
-    def evaluate_move(self, move) -> int:
-        return self.game_state.next_state(move).get_score()
-
-    def __str__(self):
-        return 'dummy 1'
-
-class Dummy2(Base):
-
-    def evaluate_move(self, move) -> int:
-        return self.game_state.next_state(move).get_score()
-
-    def __str__(self):
-        return 'dummy 2'

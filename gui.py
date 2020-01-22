@@ -5,12 +5,13 @@ import numpy as np
 from random import randint
 
 from game import Move, GameState
+from ai import Base
 from pub_sub import Publisher
 from gui_colors import *
 
 class View(tk.Frame, Publisher):
 
-    def __init__(self, game: GameState, master=None, fps: int=15):
+    def __init__(self, game: GameState, ai: Base, master=None, fps: int=15):
         # 1. Initialize superclasses
         tk.Frame.__init__(self, master)
         Publisher.__init__(self)
@@ -22,7 +23,7 @@ class View(tk.Frame, Publisher):
         self.best = tk.IntVar()
 
         # 2b. Initialize AI state
-        self.ai_state = None
+        self.ai_state = ai
         self.next_game_states = {} # move : (valid var, evaluation var, score var)
         for move in Move:
             self.next_game_states[move] = (tk.StringVar(), tk.IntVar(), tk.IntVar())
@@ -162,31 +163,35 @@ class View(tk.Frame, Publisher):
     def create_ai_panel(self, width: int):
         panel = tk.Frame(self, width=width, bg='blue')
         panel.grid_propagate(0)
-        panel.columnconfigure(0, weight=1)
-        panel.columnconfigure(0, weight=1)
+        panel.rowconfigure(0, weight=1)
+        panel.rowconfigure(1, weight=0)
 
-        # asthetics
+        # Info panel
+        info_panel = tk.Frame(panel, width=width, bg='green')
+        info_panel.grid(sticky='nsew')
+
+
+        #TODO: move asthetics
         pane_border = width/50
         grid_color = 'black'
 
-        # Next states info
+        # Next states panel
         states_container = tk.Frame(panel, width=width, bg=grid_color, pady=pane_border/2, padx=pane_border)
         states_container.grid(sticky='nsew')
-
         states_container.columnconfigure(0, weight=1)
 
         for i, move in enumerate(Move):
             state_panel = tk.Frame(states_container, bg=grid_color, pady=pane_border/2)
             valid_var, eval_var, score_var = self.next_game_states[move]
 
-            # Info panel
-            info_panel  = tk.Frame(state_panel, bg='red')
-            move_label  = tk.Label(info_panel, text=move.name, font=('Arial', 10, 'bold'))
-            eval_text   = tk.Label(info_panel, text='Evaluation')
-            score_text  = tk.Label(info_panel, text='Score')
-            valid_label = tk.Label(info_panel, textvariable=valid_var, font=('Arial', 10, 'bold'))
-            eval_label  = tk.Label(info_panel, textvariable=eval_var)
-            score_label = tk.Label(info_panel, textvariable=score_var)
+            # Data panel
+            data_panel  = tk.Frame(state_panel, bg='red')
+            move_label  = tk.Label(data_panel, text=move.name, font=('Arial', 10, 'bold'))
+            eval_text   = tk.Label(data_panel, text='Evaluation')
+            score_text  = tk.Label(data_panel, text='Score')
+            valid_label = tk.Label(data_panel, textvariable=valid_var, font=('Arial', 10, 'bold'))
+            eval_label  = tk.Label(data_panel, textvariable=eval_var)
+            score_label = tk.Label(data_panel, textvariable=score_var)
 
             move_label.grid(sticky='nsw',  row=0, column=0)
             valid_label.grid(sticky='nse', row=0, column=1)
@@ -195,15 +200,15 @@ class View(tk.Frame, Publisher):
             score_text.grid(sticky='nsw',  row=2, column=0)
             score_label.grid(sticky='nse', row=2, column=1)
 
-            info_panel.columnconfigure(0, weight=0)
-            info_panel.columnconfigure(0, weight=1)
+            data_panel.columnconfigure(0, weight=0)
+            data_panel.columnconfigure(0, weight=1)
 
             # Canvas
             move_canvas = tk.Canvas(state_panel, width=self.height/5, height=self.height/5, bg=TILE_GRID, bd=0, highlightthickness=0, cursor='crosshair')
             self.canvas_map[move_canvas] = move
 
             # Putting it together
-            info_panel.grid(sticky='nsew', row=i, column=0)
+            data_panel.grid(sticky='nsew', row=i, column=0)
             move_canvas.grid(sticky='nsew', row=i, column=1)
 
             state_panel.grid(sticky='nsew', row=i)
@@ -223,7 +228,7 @@ class View(tk.Frame, Publisher):
             valid_var, evaluation_var, score_var = self.next_game_states[move]
             validity_str = 'valid' if self.game_state.valid_move(move) else 'invalid'
             valid_var.set(validity_str)
-            #evaluation_var.set(self.ai_state.evaluate_move(move))
+            evaluation_var.set(self.ai_state.evaluate_move(move))
             score_var.set(self.game_state.next_state(move).get_score())
 
         # Update canvases
@@ -271,8 +276,10 @@ class View(tk.Frame, Publisher):
             canvas.create_text(canvas_size/2, canvas_size/2, fill=TITLE, font=title_font, text='GAME OVER')
 
 if __name__ == '__main__':
+    from ai import Dummy
     root = tk.Tk()
     game = GameState()
+    ai = Dummy(game)
 
-    view = View(game, root)
+    view = View(game, ai, root)
     view.mainloop()
