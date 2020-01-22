@@ -6,7 +6,7 @@ from time import sleep # TODO: remove
 from pub_sub import Publisher
 
 from ai import BasePlayer, RandomPlayer
-from game import Move, Game
+from game import Move, GameState
 from gui import View
 
 class KeyboardManager(Publisher):
@@ -24,45 +24,38 @@ class KeyboardManager(Publisher):
         if symbol == 'return':
             self.publish_event('keypress enter')
         elif symbol == 'w' or symbol == 'up':
-            self.publish_event('move', Move.UP)
+            self.publish_event('keyboard move', Move.UP)
         elif symbol == 's' or symbol == 'down':
-            self.publish_event('move', Move.DOWN)
+            self.publish_event('keyboard move', Move.DOWN)
         elif symbol == 'a' or symbol == 'left':
-            self.publish_event('move', Move.LEFT)
+            self.publish_event('keyboard move', Move.LEFT)
         elif symbol == 'd' or symbol == 'right':
-            self.publish_event('move', Move.RIGHT)
+            self.publish_event('keyboard move', Move.RIGHT)
 
-class StateManager(Publisher):
+class GameManager(Publisher):
 
-    def __init__(self, state: Game=None):
+    def __init__(self, game: GameState=None):
         Publisher.__init__(self)
-        self.model = state if state is not None else Game()
+        self.game_state = game if game is not None else GameState()
 
     def handle_event(self, event, data):
-        if event == 'new game':
-            self.model = Game(data)
-            self.publish_event('update state', self.model)
-        elif event == 'keyboard move':
+        if event == 'restart':              # data contains size
+            self.game_state = GameState(data)
+            self.publish_event('new game', self.game_state)
+        elif event == 'keyboard move':      # data contains move
             self.make_move(data)
-        elif event == 'ai move':
-            self.make_move(data)
-        elif event == 'view enable ai':
-            self.publish_event('enable ai', self.model)
-        elif event == 'view disable ai':
-            self.publish_event('disable ai')
-        elif event == 'keypress enter':
-            pass
-
+            
         else:
             raise Exception
 
     def make_move(self, move: Move):
-        if self.model.game_over():
+        if self.game_state.game_over():
             return
 
-        self.model.make_move(move)
-        if self.model.game_over():
-            self.publish_event('disable ai')
+        self.game_state.update_state(move)
+        
+        if self.game_state.game_over():
+            pass
 
 class AIManager(Publisher):
 
@@ -71,7 +64,7 @@ class AIManager(Publisher):
         self.ai : BasePlayer = None
 
     def handle_event(self, event, data):
-        if event == 'update state':
+        if event == 'update game':
             pass
         elif event == 'enable ai':
             self.launch_ai(data)
@@ -83,8 +76,8 @@ class AIManager(Publisher):
         else:
             raise Exception
 
-    def launch_ai(self, state: Game):
-        self.ai = RandomPlayer(state) #TODO: factory method
+    def launch_ai(self, game: GameState):
+        self.ai = RandomPlayer(game) #TODO: factory method
 
         worker = Thread(target=self.run_ai, daemon=True)
         worker.start()
@@ -105,29 +98,23 @@ class AIManager(Publisher):
 class Application(object):
 
     def __init__(self):
-        state = Game()
+        game = GameState()
 
         # Initialize tkinter thread
         root = tk.Tk()
 
         # Initialize distributed components
-        self.control = StateManager(state)
+        self.control = GameManager(game)
         self.keyboard = KeyboardManager(root)
-        self.view = View(state, root)
-        self.ai = AIManager()
+        self.view = View(game, root)
 
         # Set up subscriptions
-        connected = [self.control, self.view, self.ai]
-        for i, component1 in enumerate(connected):
-            for j, component2 in enumerate(connected):
-                if i != j:
-                    component1.subscribe(component2)
-
         self.control.subscribe(self.keyboard)
+        self.control.subscribe(self.view)
+        self.view.subscribe(self.control)
 
     def launch(self):
         self.control.launch_thread()
-        self.ai.launch_thread()
         self.view.launch_thread() # NOTE: blocking thread
 
 if __name__ == '__main__':

@@ -1,19 +1,19 @@
 
 import random
-from game.game import Move, Game
+from game.game import Move, GameState
 
 from .base import Player
 
 class RandomPlayer(Player):
     
-    def get_move(self, state: Game) -> Move:
+    def get_move(self, state: GameState) -> Move:
         moves = [m for m in Move]
         return random.choice(moves)
 
 
 class StateNode(object):
 
-    def __init__(self, board: Game, parent=None):
+    def __init__(self, board: GameState, parent=None):
         self.board = board
         self.parent = parent
         self.children = None
@@ -54,10 +54,10 @@ class SearchTree(Player):
 
         self.depth = 3
 
-    def get_move(self, board: Game) -> Move:
+    def get_move(self, board: GameState) -> Move:
         pass
         
-    def find_node(self, board: Game):
+    def find_node(self, board: GameState):
         search = StateNode(board)
         frontier = [self.root]
         while len(frontier) > 0:
@@ -93,7 +93,7 @@ class SearchTree(Player):
         return s
 
 if __name__ == '__main__':
-    board = Game()
+    board = GameState()
 
     node = StateNode(board)
     tree = SearchTree()

@@ -1,12 +1,12 @@
 
-from board import Game
+from board import GameState
 from node import BoardNode
 
 from random import choice
 
 class MoveTree:
 
-    def __init__(self, board:Game, iterations=5):
+    def __init__(self, board:GameState, iterations=5):
         self.board = board
         self.iterations = iterations
         self.root = BoardNode(board)
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     for j in range(10):
         print(f'--- Iteration {j+1} ---')
 
-        board1 = Game(4)
-        board2 = Game(4)
+        board1 = GameState(4)
+        board2 = GameState(4)
 
         iterations = 4
         AI1 = MoveTree(board1, iterations)

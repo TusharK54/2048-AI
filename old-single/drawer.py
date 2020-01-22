@@ -4,7 +4,7 @@ import tkinter as tk
 from json import load
 from math import log
 
-from board import Game
+from board import GameState
 from node import BoardNode
 import color_constants as color
 
@@ -12,7 +12,7 @@ class Window:
 
     def __init__(self, size=500):
         self.size = size
-        self.board = Game()
+        self.board = GameState()
         self.board.tilemap = [[4,   8,   32, 2],
                               [2,   128, 32,  2],
                               [2,   64,   0,  0],

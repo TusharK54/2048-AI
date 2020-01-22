@@ -2,24 +2,25 @@
 import unittest
 
 import numpy as np
-from game import Move, Game
+from game import Move, GameState
 
 class GameTests(unittest.TestCase):
     
     def setUp(self):
-        self.state = Game()
+        self.state = GameState()
 
     def compare_row(self, before, expected):
         # Test LEFT
         self.state.matrix[0] = before
-        new_board = self.state.slide_matrix(Move.LEFT)
+        new_board, _ = self.state.slide_tiles(Move.LEFT)
+        print(new_board)
         after = new_board[0]
 
         self.assertTrue(np.array_equal(after, expected), f'\nFailed LEFT test\nActual: { after }\nExpected: { expected }')
 
         # Test RIGHT
         self.state.matrix[0] = np.flip(before)
-        new_board = self.state.slide_matrix(Move.RIGHT)
+        new_board = self.state.slide_tiles(Move.RIGHT)
         after = np.flip(new_board[0])
         
         self.assertTrue(np.array_equal(after, expected), f'\nFailed RIGHT test\nActual: { after }\nExpected: { expected }')
@@ -29,7 +30,7 @@ class GameTests(unittest.TestCase):
         matrix = self.state.matrix
         matrix = np.rot90(matrix, -1)
         self.state.matrix = matrix
-        matrix = self.state.slide_matrix(Move.UP)
+        matrix = self.state.slide_tiles(Move.UP)
         matrix = np.rot90(matrix, 1)
         after = matrix[0]
 
@@ -40,7 +41,7 @@ class GameTests(unittest.TestCase):
         matrix = self.state.matrix
         matrix = np.rot90(matrix, 1)
         self.state.matrix = matrix
-        matrix = self.state.slide_matrix(Move.DOWN)
+        matrix = self.state.slide_tiles(Move.DOWN)
         matrix = np.rot90(matrix, -1)
         after = matrix[0]
 

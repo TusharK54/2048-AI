@@ -3,20 +3,20 @@ import tkinter as tk
 import numpy as np
 import abc
 
-from game.game import Move, Game
+from game.game import Move, GameState
 
 class ViewModel(abc.ABC):
     """A mostly read-only model for the view."""
 
-    def __init__(self, board: Game=None):
+    def __init__(self, board: GameState=None):
         self.board = board
         self.size = tk.IntVar()
         self.score = tk.IntVar()
         self.best = tk.IntVar()
         self.ai = False
 
-    def get_board(self) -> Game:
-        """Return a `Game` object with a copy of the state of the board."""
+    def get_board(self) -> GameState:
+        """Return a `GameState` object with a copy of the state of the board."""
         return self.board.copy()
 
     def get_size_var(self) -> tk.IntVar:
@@ -54,8 +54,8 @@ class ControlModel(ViewModel):
         self.new_game()
 
     def new_game(self, size: int=None):
-        default_board = Game() if self.size.get() == 0 else Game(self.size.get())
-        self.board = default_board if size is None else Game(size)
+        default_board = GameState() if self.size.get() == 0 else GameState(self.size.get())
+        self.board = default_board if size is None else GameState(size)
         self.update_vars()
 
     def update_vars(self):
@@ -69,6 +69,6 @@ class ControlModel(ViewModel):
 
     def move_tiles(self, direction: Move) -> bool:
         """Push tiles in the specified direction and return whether that was a valid move."""
-        validity = self.board.make_move(direction)
+        validity = self.board.valid_move(direction)
         self.update_vars()
         return validity

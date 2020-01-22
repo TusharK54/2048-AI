@@ -2,7 +2,7 @@
 ### Introduction
 The aim of this project was twofold - first, to replicate as closely as possible the original 2048 game and its mechanics, and second, to build an AI that could play the game and beat it on its own consistently. I wrote everything in Python 3.7 and completed this project in about 2 weeks.
 
-### The Game
+### The GameState
 ##### Gameplay (from Wikipedia)
 2048 is played on a (typically 4x4) grid, with numbered tiles that slide when a player moves them using the four arrow keys. Every turn, a new tile will randomly spawn in an empty spot on the board with a value of either 2 or 4. Tiles slide as far as possible in the chosen direction until they are stopped by either another tile or the edge of the grid. If two tiles of the same number collide while moving, they will merge into a tile with the total value of the two tiles that collided. The resulting tile cannot merge with another tile again in the same move. The user's score starts at zero, and is increased whenever two tiles combine, by the value of the new tile. When the player can no longer make a move, the game is over.
 

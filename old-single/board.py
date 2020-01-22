@@ -1,7 +1,7 @@
 
 import random
 
-class Game:
+class GameState:
 
     UP    = 'up'
     DOWN  = 'down'
@@ -22,7 +22,7 @@ class Game:
         self.spawn_tile()
 
     def copy(self):
-        board = Game()
+        board = GameState()
         board.size = self.size
         board.score = self.score
         board.tilemap = [[x for x in row] for row in self.tilemap]
@@ -55,7 +55,7 @@ class Game:
     def _remaining_moves(self):
         clear_tiles = [(i,j) for i in range(self.size) for j in range (self.size) if self.tilemap[i][j] == 0]
         if len(clear_tiles) > 0: return True
-        for move in [Game.UP, Game.DOWN, Game.LEFT, Game.RIGHT]:
+        for move in [GameState.UP, GameState.DOWN, GameState.LEFT, GameState.RIGHT]:
             board = self.deterministic_copy()
             board.move(move)
             if board.valid_last_move: return True
@@ -64,10 +64,10 @@ class Game:
     def _move_tiles(self, direction: str):
         """Moves tiles in specified direction"""
         self.valid_last_move = False
-        if   direction == Game.UP:     rotations = 3
-        elif direction == Game.LEFT:   rotations = 0
-        elif direction == Game.DOWN:   rotations = 1
-        elif direction == Game.RIGHT:  rotations = 2
+        if   direction == GameState.UP:     rotations = 3
+        elif direction == GameState.LEFT:   rotations = 0
+        elif direction == GameState.DOWN:   rotations = 1
+        elif direction == GameState.RIGHT:  rotations = 2
         else: 
             print(f'{direction} not a valid direction')
             return
@@ -130,8 +130,8 @@ class Game:
         print('*'*20)
 
 if __name__ == '__main__':
-    b = Game(4)
+    b = GameState(4)
     b.spawn_tile()
     b.pretty_print()
-    b.move(Game.DOWN)
+    b.move(GameState.DOWN)
     b.pretty_print()

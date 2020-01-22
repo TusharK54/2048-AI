@@ -2,7 +2,7 @@ import tkinter as tk
 from json import load
 from math import log
 
-from board import Game
+from board import GameState
 from tree import MoveTree
 import color_constants as color
 
@@ -12,7 +12,7 @@ class Window:
         self.size = size
         self.human = True
         self.best = {3:0, 4:0, 5:0, 6:0}
-        self.board = Game()
+        self.board = GameState()
         self.ai_lookahead = 4               # Number of moves the ai looks ahead (values >5 cause slow performance)
         self.ai_speed = self.ai_lookahead   # Time between ai moves in milliseconds
         
@@ -44,7 +44,7 @@ class Window:
         self.size_buttons = []
         def change_size(new_size):
             if self.board.size == new_size or not self.human: return
-            self.board = Game(size=new_size)
+            self.board = GameState(size=new_size)
             self._new_game()
             for button in self.size_buttons:
                 if button['text'] == str(new_size):
@@ -66,7 +66,7 @@ class Window:
         self.size_buttons.append(self.size_button_5)
         self.size_buttons.append(self.size_button_6)
 
-        self.button1 = tk.Button(self.info_panel, text='New Game', width=8, command=self._new_game, bg=color.DEFAULT_STANDARD_BUTTON, fg=color.BUTTON_LABELS, disabledforeground=color.BUTTON_LABELS, font=('Arial', 10, 'bold'), relief=tk.FLAT)
+        self.button1 = tk.Button(self.info_panel, text='New GameState', width=8, command=self._new_game, bg=color.DEFAULT_STANDARD_BUTTON, fg=color.BUTTON_LABELS, disabledforeground=color.BUTTON_LABELS, font=('Arial', 10, 'bold'), relief=tk.FLAT)
         self.player_button_var = tk.StringVar()
         self.player_button_var.set('Enable AI')
         self.button2 = tk.Button(self.info_panel, textvariable=self.player_button_var, width=8, command=self._toggle_ai, bg=color.DEFAULT_STANDARD_BUTTON, fg=color.BUTTON_LABELS, disabledforeground=color.BUTTON_LABELS, font=('Arial', 10, 'bold'), relief=tk.FLAT)
@@ -147,7 +147,7 @@ class Window:
 
         if self.gameover:
             self.canvas.create_rectangle(0, 0, self.size, self.size, width=0, fill=color.GAME_OVER_STIPPLE, stipple='gray50')
-            self.canvas.create_text(self.size/2, self.size/2-25, text='Game Over', font=('Arial', 50, 'bold'), fill=color.TITLE)
+            self.canvas.create_text(self.size/2, self.size/2-25, text='GameState Over', font=('Arial', 50, 'bold'), fill=color.TITLE)
             self.canvas.create_text(self.size/2, self.size/2+25, text='Press [ENTER] to play again', font=('Helvetica Neue', 15, 'bold'), fill=color.TITLE)
 
     def _ai_play(self):
@@ -176,19 +176,19 @@ class Window:
 
     def _keypress_up(self, event):
         if self.human:
-            self._move_board(Game.UP)
+            self._move_board(GameState.UP)
 
     def _keypress_down(self, event):
         if self.human: 
-            self._move_board(Game.DOWN)
+            self._move_board(GameState.DOWN)
 
     def _keypress_left(self, event):
         if self.human: 
-            self._move_board(Game.LEFT)
+            self._move_board(GameState.LEFT)
 
     def _keypress_right(self, event):
         if self.human: 
-            self._move_board(Game.RIGHT)
+            self._move_board(GameState.RIGHT)
 
 if __name__ == '__main__':
 
