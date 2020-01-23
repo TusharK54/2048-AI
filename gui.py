@@ -22,7 +22,7 @@ class View(tk.Frame, Publisher):
         self.score = tk.IntVar()
         self.best = tk.IntVar()
 
-        # 2b. Initialize AI state
+        # 2b. Initialize STATES state
         self.ai_state = ai
         self.next_game_states = {} # move : (valid var, evaluation var, score var)
         for move in Move:
@@ -34,21 +34,21 @@ class View(tk.Frame, Publisher):
         self.initialize_fonts()
 
         # 4. Build UI
-        control_panel_height = 130
-        game_panel_size = 520
-        ai_panel_width = 330
+        width, height = 850, 650
+        game_size = 520
 
-        self.height = game_panel_size + control_panel_height
-        self.width = game_panel_size + ai_panel_width
+        self.height = game_size + (height-game_size)
 
-        control_panel = self.create_control_panel(control_panel_height)
-        game_panel = self.create_game_canvas(self.height-control_panel_height)
-        ai_panel = self.create_ai_panel(self.width-(self.height-control_panel_height))
+        control_panel = self.create_control_panel(game_size, height-game_size)
+        game_panel = self.create_game_canvas(game_size)
+        next_states_panel = self.create_states_panel(width-game_size, game_size)
+        ai_state_panel = self.create_ai_panel(width-game_size, height-game_size)
         self.grid(sticky='nsew')
 
         control_panel.grid(sticky='nsew', row=0, column=0)
         game_panel.grid(sticky='nsew', row=1, column=0)
-        ai_panel.grid(sticky='nsew', row=0, column=1, rowspan=2)
+        next_states_panel.grid(sticky='nsew', row=1, column=1)
+        ai_state_panel.grid(sticky='nsew', row=0, column=1)
 
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=0)
@@ -79,19 +79,25 @@ class View(tk.Frame, Publisher):
         self.mainloop()
 
     def initialize_fonts(self):
-        self.number_font    = ('Slope Opera', 48, 'bold')       # size sets '2048' title
-        self.box_font       = ('Slope Opera', 20, 'bold')
-        self.splash_font     = ('Hysterix', .8, 'bold')         # size acts at multiplier
-        self.box_title_font = ('Hysterix', 12, '')
+        self.tile_font    = ('Slope Opera', 48, 'bold')       # size sets '2048' title
+        self.score_font       = ('Slope Opera', 20, 'bold')
+        self.splash_font    = ('Hysterix', .8, 'bold')         # size acts at multiplier
+        self.box_font = ('Hysterix', 12, '')
         self.button_font    = ('Hysterix', 12, '')
+        
+        self.state_move_font = ('Arial', 10, 'bold')
+        self.state_valid_font = ('Arial', 10, 'bold')
+        self.state_score_font = ('Hysterix', 10, '')
+        self.state_box_font = ('Slope Opera', 10, 'bold')
 
-    def create_control_panel(self, height: int):
+
+    def create_control_panel(self, width: int, height: int) -> tk.Frame:
         margin = height/35
-        panel = tk.Frame(self, height=height, bg=INFO_BACKGROUND, padx=margin, pady=margin)
+        panel = tk.Frame(self, width=width, height=height, bg=INFO_BACKGROUND, padx=margin, pady=margin)
         panel.grid_propagate(0)
 
         # 2048 title
-        title = tk.Label(panel, text='2048', font=self.number_font, fg=TITLE, bg=INFO_BACKGROUND, padx=0, pady=0, bd=0)
+        title = tk.Label(panel, text='2048', font=self.tile_font, fg=TITLE, bg=INFO_BACKGROUND, padx=0, pady=0, bd=0)
         #title = tk.Canvas(panel, bg=INFO_BACKGROUND, bd=0)
         #text = title.create_text(15, -8, text='2048', fill=TITLE, font=self.('Arial', 50, 'bold'), anchor='nw')
         #bbox = title.bbox(text)  # get text bounding box
@@ -101,11 +107,11 @@ class View(tk.Frame, Publisher):
         score_box1 = tk.Frame(panel, bd=0, bg=SCORE_BOX)
         score_box2 = tk.Frame(panel, bd=0, bg=SCORE_BOX)
 
-        score_label1 = tk.Label(score_box1, text='SCORE', width=7, bd=0, fg=SCORE_TITLE, bg=SCORE_BOX, font=self.box_title_font)
-        score_label2 = tk.Label(score_box2, text='BEST', width=7, bd=0, fg=SCORE_TITLE, bg=SCORE_BOX, font=self.box_title_font)
+        score_label1 = tk.Label(score_box1, text='SCORE', width=7, bd=0, fg=SCORE_TITLE, bg=SCORE_BOX, font=self.box_font)
+        score_label2 = tk.Label(score_box2, text='BEST', width=7, bd=0, fg=SCORE_TITLE, bg=SCORE_BOX, font=self.box_font)
 
-        score_val1 = tk.Label(score_box1, textvariable=self.score, bd=0, fg=BUTTON_LABELS, bg=SCORE_BOX, font=self.box_font)
-        score_val2 = tk.Label(score_box2,  textvariable=self.best, bd=0, fg=BUTTON_LABELS, bg=SCORE_BOX, font=self.box_font)
+        score_val1 = tk.Label(score_box1, textvariable=self.score, bd=0, fg=BUTTON_LABELS, bg=SCORE_BOX, font=self.score_font)
+        score_val2 = tk.Label(score_box2,  textvariable=self.best, bd=0, fg=BUTTON_LABELS, bg=SCORE_BOX, font=self.score_font)
 
         score_label1.grid(sticky='nsew')
         score_label2.grid(sticky='nsew')
@@ -154,66 +160,76 @@ class View(tk.Frame, Publisher):
 
         return panel
 
-    def create_game_canvas(self, size: int):
+    def create_game_canvas(self, size: int) -> tk.Canvas:
         canvas = tk.Canvas(self, width=size, height=size, bg=TILE_GRID, bd=0, highlightthickness=0, cursor='crosshair')
         self.canvas_map[canvas] = None
 
         return canvas
 
-    def create_ai_panel(self, width: int):
-        panel = tk.Frame(self, width=width, bg='blue')
+    def create_states_panel(self, width: int, height: int) -> tk.Frame:
+        margin=3
+        panel = tk.Frame(self, width=width, height=height, bg=STATES_BACKGROUND, pady=margin/2)
         panel.grid_propagate(0)
         panel.rowconfigure(0, weight=1)
-        panel.rowconfigure(1, weight=0)
-
-        # Info panel
-        info_panel = tk.Frame(panel, width=width, bg='green')
-        info_panel.grid(sticky='nsew')
-
-
-        #TODO: move asthetics
-        pane_border = width/50
-        grid_color = 'black'
-
-        # Next states panel
-        states_container = tk.Frame(panel, width=width, bg=grid_color, pady=pane_border/2, padx=pane_border)
-        states_container.grid(sticky='nsew')
-        states_container.columnconfigure(0, weight=1)
+        panel.columnconfigure(0, weight=1)
 
         for i, move in enumerate(Move):
-            state_panel = tk.Frame(states_container, bg=grid_color, pady=pane_border/2)
+            state_panel = tk.Frame(panel, bg=STATES_BACKGROUND, pady=margin/2)
             valid_var, eval_var, score_var = self.next_game_states[move]
 
             # Data panel
-            data_panel  = tk.Frame(state_panel, bg='red')
-            move_label  = tk.Label(data_panel, text=move.name, font=('Arial', 10, 'bold'))
-            eval_text   = tk.Label(data_panel, text='Evaluation')
-            score_text  = tk.Label(data_panel, text='Score')
-            valid_label = tk.Label(data_panel, textvariable=valid_var, font=('Arial', 10, 'bold'))
-            eval_label  = tk.Label(data_panel, textvariable=eval_var)
-            score_label = tk.Label(data_panel, textvariable=score_var)
+            data_panel  = tk.Frame(state_panel, bg=STATES_BACKGROUND, padx=margin/2)
+            move_box    = tk.Frame(data_panel)
+            score_box   = tk.Frame(data_panel, bg=STATES_SCORE_BOX)
+            eval_box    = tk.Frame(data_panel, bg=STATES_SCORE_BOX)
 
-            move_label.grid(sticky='nsw',  row=0, column=0)
-            valid_label.grid(sticky='nse', row=0, column=1)
-            eval_text.grid(sticky='nsw',   row=1, column=0)
-            eval_label.grid(sticky='nse',  row=1, column=1)
-            score_text.grid(sticky='nsw',  row=2, column=0)
-            score_label.grid(sticky='nse', row=2, column=1)
+            move_box.grid(sticky='nsew')
+            score_box.grid(sticky='nsew', pady=margin/2)
+            eval_box.grid(sticky='nsew')
 
-            data_panel.columnconfigure(0, weight=0)
             data_panel.columnconfigure(0, weight=1)
+            data_panel.rowconfigure(1, weight=1)
+            data_panel.rowconfigure(2, weight=1)
+
+            # Move box
+            move_label  = tk.Label(move_box, text=move.name, font=self.state_move_font)
+            valid_label = tk.Label(move_box, textvariable=valid_var, font=self.state_valid_font)
+            move_label.grid(sticky='nsw', row=0, column=0)
+            valid_label.grid(sticky='nse', row=0, column=1)
+            move_box.columnconfigure(0, weight=1)
+            move_box.columnconfigure(1, weight=1)
+
+            # Score box
+            score_text  = tk.Label(score_box, bg=STATES_SCORE_BOX, fg=STATES_SCORE_BOX_TEXT, font=self.state_score_font, text='Game Score')
+            score_label = tk.Label(score_box, bg=STATES_SCORE_BOX, fg=STATES_SCORE_BOX_VALUE, font=self.state_box_font,textvariable=score_var)
+            score_text.grid(sticky='nsw', row=0)
+            score_label.grid(sticky='nse', row=1)
+            score_box.columnconfigure(0, weight=1)
+
+            # Evaluation box
+            eval_text   = tk.Label(eval_box, bg=STATES_SCORE_BOX, fg=STATES_SCORE_BOX_TEXT, font=self.state_score_font, text='AI Score')
+            eval_label  = tk.Label(eval_box, bg=STATES_SCORE_BOX, fg=STATES_SCORE_BOX_VALUE, font=self.state_box_font, textvariable=eval_var)
+            eval_text.grid(sticky='nsw', row=0)
+            eval_label.grid(sticky='nse', row=1)
+            eval_box.columnconfigure(0, weight=1)
 
             # Canvas
-            move_canvas = tk.Canvas(state_panel, width=self.height/5, height=self.height/5, bg=TILE_GRID, bd=0, highlightthickness=0, cursor='crosshair')
+            canvas_size = (height-7*margin)/4 # Determines height of state panel
+            move_canvas = tk.Canvas(state_panel, width=canvas_size, height=canvas_size, bg=TILE_GRID, bd=0, highlightthickness=0, cursor='crosshair')
             self.canvas_map[move_canvas] = move
 
             # Putting it together
             data_panel.grid(sticky='nsew', row=i, column=0)
-            move_canvas.grid(sticky='nsew', row=i, column=1)
+            move_canvas.grid(sticky='nsew', row=i, column=1, padx=margin/2)
 
-            state_panel.grid(sticky='nsew', row=i)
+            state_panel.grid(sticky='nsew', row=i, padx=margin/2)
             state_panel.columnconfigure(0, weight=1)
         
+        return panel
+
+    def create_ai_panel(self, width: int, height: int) -> tk.Frame:
+        panel = tk.Frame(self, width=width, height=height, bg=AI_BACKGROUND)
+
         return panel
 
     def animate(self):
@@ -266,7 +282,7 @@ class View(tk.Frame, Publisher):
 
                 text_size = tile_size/3 if (tile == 0 or log(tile, 10) < 2) else tile_size/int(log(tile, 10)+1)
 
-                number_font = (self.number_font[0], int(text_size), self.number_font[2])
+                number_font = (self.tile_font[0], int(text_size), self.tile_font[2])
                 canvas.create_rectangle(x0, y0, x1, y1, width=0, fill=tile_color)
                 canvas.create_text((x0+x1)/2, (y0+y1)/2, text=tile, fill=text_color, justify='center', font=number_font)
 

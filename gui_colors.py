@@ -12,6 +12,13 @@ BUTTON_LABELS           = '#f9f6f2'
 TILE_GRID               = '#938578'
 GAME_OVER_STIPPLE       = '#eee4da'
 
+STATES_BACKGROUND     = 'black'
+STATES_SCORE_BOX            = 'red'
+STATES_SCORE_BOX_TEXT       = SCORE_TITLE
+STATES_SCORE_BOX_VALUE      = BUTTON_LABELS
+
+AI_BACKGROUND = 'blue'
+
 TILES = {}
 TILES['default']    = {'tile': '#3c3a32', 'text': '#f9f6f2'}
 TILES[str(0)]       = {'tile': '#bbada0', 'text': '#bbada0'}

@@ -73,9 +73,8 @@ class QueueManager(ABC):
             else:
                 try:
                     self.handle_event(event, data)
-                except Exception as e:
+                except Exception:
                     print(self.get_id(), 'skipped event:', item)
-                    raise e
                 else:
                     print(self.get_id(), 'handled event:', item)
 

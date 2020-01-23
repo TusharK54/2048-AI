@@ -48,7 +48,11 @@ class Base(ABC):
 class Dummy(Base):
 
     def evaluate_move(self, move) -> int:
-        return self.game_state.next_state(move).get_score()
+        val = 0
+        for tile in self.game_state.next_state(move).get_matrix().flatten():
+            if tile != 0:
+                val += tile ** 2
+        return val
 
     def __str__(self):
         return 'dummy 1'
