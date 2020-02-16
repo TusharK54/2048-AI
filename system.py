@@ -5,7 +5,7 @@ from time import sleep # TODO: remove
 
 from pub_sub import Publisher
 
-from ai import Base, Dummy, Dummy2
+from ai import BaseAI, DummyAI
 from game import Move, GameState
 from gui import View
 
@@ -59,23 +59,59 @@ class GameManager(Publisher):
 
 class AIManager(Publisher):
 
-    def __init__(self, ai: Base):
+    def __init__(self, ai: BaseAI):
         Publisher.__init__(self)
         self.ai_state = ai
+        self.running = False
 
     def handle_event(self, event, data):
         if event == 'new game':             # data contains new game state
-            self.ai_state = Dummy2(data) # TODO: factory method
-            self.publish_event('new ai', self.ai_state)
-        
+            self.new_game(data)
+        elif event == 'start ai':
+            self.start()
+        elif event == 'stop ai':
+            self.stop()
+        elif event == 'step ai':
+            self.step()
+        elif event == 'run':
+            self._run()
+
         else:
             raise Exception
+
+    def new_game(self, game: GameState):
+        self.stop()
+        self.ai_state = DummyAI(game) # TODO: factory method
+        self.publish_event('ai new', self.ai_state)
+        self.publish_event('toggle ai', False)
+
+    def start(self):
+        if not self.ai_state.game_state.game_over():
+            self.running = True
+            self.publish_event('toggle ai', True)
+            self.queue('run')
+
+    def stop(self):
+        self.running = False
+        self.publish_event('toggle ai', False)
+
+    def step(self):
+        if not self.ai_state.game_state.game_over():
+            self.ai_state.make_move()
+
+    def _run(self):
+       # sleep(100/1000)
+        self.step()
+        if self.ai_state.game_state.game_over():
+            self.stop()
+        elif self.running:
+            self.queue('run')
 
 class Application(object):
 
     def __init__(self):
         game = GameState()
-        ai = Dummy(game) # TODO: factory method
+        ai = DummyAI(game) # TODO: factory method
 
         # Initialize tkinter thread
         root = tk.Tk()
@@ -90,6 +126,7 @@ class Application(object):
         self.game_control.subscribe(self.keyboard)
         self.game_control.subscribe(self.view)
         self.ai_control.subscribe(self.game_control)
+        self.ai_control.subscribe(self.view)
         self.view.subscribe(self.game_control)
         self.view.subscribe(self.ai_control)
 

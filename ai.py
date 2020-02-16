@@ -4,18 +4,15 @@ from abc import ABC, abstractmethod
 from random import choice
 
 from game import Move, GameState
+from pub_sub import QueueManager
 
-class Base(ABC):
+class BaseAI(ABC):
 
     def __init__(self, game: GameState):
         self.game_state = game
 
-    # prolly removable
-    def get_game_state(self) -> GameState:
-        return self.game_state
-
-    def make_move(self, move: Move=None):
-        """Update the game state by applying `move` or picking the best valid move as determined by `self.evaluate_move`."""
+    def make_move(self, move: Move=None) -> Move:
+        """Update the game state by applying `move` or picking the best valid move as determined by `self.evaluate_move`. Returns the move made."""
         if move is None:
             # Generate a list of the highest-evaluated moves
             best_evaluation, best_moves = None, []            
@@ -30,10 +27,11 @@ class Base(ABC):
                 elif evaluation == best_evaluation:
                     best_moves.append(move)
 
-            # Pick a Dummy highest-evaluated move
-            move = choice(best_moves)
+            # Deterministically pick a highest-evaluated move
+            move = best_moves[0]
 
         self.game_state.update_state(move)
+        return move
 
     @abstractmethod
     def evaluate_move(self, move: Move) -> int:
@@ -45,7 +43,7 @@ class Base(ABC):
         """Return the name of this AI."""
         pass
         
-class Dummy(Base):
+class DummyAI(BaseAI):
 
     def evaluate_move(self, move) -> int:
         val = 0
@@ -57,10 +55,10 @@ class Dummy(Base):
     def __str__(self):
         return 'dummy 1'
 
-class Dummy2(Base):
+class SearchTreeAI(BaseAI):
 
     def evaluate_move(self, move) -> int:
-        return self.game_state.next_state(move).get_score()
+        pass
 
     def __str__(self):
-        return 'dummy 2'
+        return 'Search Tree'

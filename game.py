@@ -103,10 +103,13 @@ class GameState(object):
     def spawn_tile(self):
         clear_tiles = [(i,j) for i in range(len(self.matrix)) for j in range(len(self.matrix)) if self.matrix[i][j] == 0]
         
-        random.setstate(self.random_state)
-        row, col = random.choice(clear_tiles)
-        self.matrix[row][col] = 2 if random.random() >= self.spawn_4_chance else 4
-        self.random_state = random.getstate()
+        try:
+            random.setstate(self.random_state)
+            row, col = random.choice(clear_tiles)
+            self.matrix[row][col] = 2 if random.random() >= self.spawn_4_chance else 4
+            self.random_state = random.getstate()
+        except IndexError:
+            print('ERROR: Cannot spawn tile')
 
     def __eq__(self, other):
         return np.array_equal(self.matrix, other.matrix) and \

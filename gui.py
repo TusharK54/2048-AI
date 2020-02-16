@@ -5,28 +5,28 @@ import numpy as np
 from random import randint
 
 from game import Move, GameState
-from ai import Base
+from ai import BaseAI
 from pub_sub import Publisher
 from gui_colors import *
 
 class View(tk.Frame, Publisher):
 
-    def __init__(self, game: GameState, ai: Base, master=None, fps: int=15):
+    def __init__(self, game: GameState, ai: BaseAI, master=None, fps: int=15):
         # 1. Initialize superclasses
         tk.Frame.__init__(self, master)
         Publisher.__init__(self)
 
-        # 2a. Initialize game state
+        # 2a. Initialize game state game-dependent ui state
         self.game_state = game
         self.size = tk.IntVar()
         self.score = tk.IntVar()
         self.best = tk.IntVar()
 
-        # 2b. Initialize STATES state
+        # 2b. Initialize ai state and ai-dependent ui state
         self.ai_state = ai
-        self.next_game_states = {} # move : (valid var, evaluation var, score var)
-        for move in Move:
-            self.next_game_states[move] = (tk.StringVar(), tk.IntVar(), tk.IntVar())
+        self.ai_running = False
+        self.next_state_vars = {move: (tk.StringVar(), tk.IntVar(), tk.IntVar()) for move in Move} # move : (valid var, evaluation var, score var)
+        self.next_state_ui = {move: [] for move in Move} # move : tkinter widget that has a dynamic bg color
 
         # 3. Configure properties for the next step
         self.fps = 1000//fps
@@ -63,15 +63,23 @@ class View(tk.Frame, Publisher):
             self.game_state = data
         elif event == 'new ai':     # data contains new ai state
             self.ai_state = data
+        elif event == 'toggle ai':  # data contains bool ai running
+            self.ai_running = data
 
         else:
             raise Exception
 
-    def ai_toggle_event(self):
-        pass
-
     def new_game_event(self):
         self.publish_event('restart', self.size.get())
+
+    def step_ai_event(self):
+        self.publish_event('step ai')
+
+    def toggle_ai_event(self):
+        if self.ai_running:
+            self.publish_event('stop ai')
+        else:
+            self.publish_event('start ai')
 
     def launch_thread(self):
         """Launch the gui mainloop. NOTE: This launches a blocking thread!"""
@@ -85,7 +93,7 @@ class View(tk.Frame, Publisher):
         self.box_font = ('Hysterix', 12, '')
         self.button_font    = ('Hysterix', 12, '')
         
-        self.state_move_font = ('Arial', 10, 'bold')
+        self.state_move_font = ('Hysterix', 10, '')
         self.state_valid_font = ('Arial', 10, 'bold')
         self.state_score_font = ('Hysterix', 10, '')
         self.state_box_font = ('Slope Opera', 10, 'bold')
@@ -142,7 +150,8 @@ class View(tk.Frame, Publisher):
         for button in size_buttons.winfo_children():
             button.configure(command=self.new_game_event)
         button1.configure(command=self.new_game_event)
-        button2.configure(command=self.ai_toggle_event)
+        button2.configure(command=self.toggle_ai_event)
+        self.ai_toggle_button = button2
 
         # Position widgets into place
         title.grid(row=0, column=0, sticky='nsew')
@@ -175,7 +184,7 @@ class View(tk.Frame, Publisher):
 
         for i, move in enumerate(Move):
             state_panel = tk.Frame(panel, bg=STATES_BACKGROUND, pady=margin/2)
-            valid_var, eval_var, score_var = self.next_game_states[move]
+            _, eval_var, score_var = self.next_state_vars[move]
 
             # Data panel
             data_panel  = tk.Frame(state_panel, bg=STATES_BACKGROUND, padx=margin/2)
@@ -193,9 +202,7 @@ class View(tk.Frame, Publisher):
 
             # Move box
             move_label  = tk.Label(move_box, text=move.name, font=self.state_move_font)
-            valid_label = tk.Label(move_box, textvariable=valid_var, font=self.state_valid_font)
             move_label.grid(sticky='nsw', row=0, column=0)
-            valid_label.grid(sticky='nse', row=0, column=1)
             move_box.columnconfigure(0, weight=1)
             move_box.columnconfigure(1, weight=1)
 
@@ -224,6 +231,10 @@ class View(tk.Frame, Publisher):
 
             state_panel.grid(sticky='nsew', row=i, padx=margin/2)
             state_panel.columnconfigure(0, weight=1)
+
+            # Configure dynamic background color manager
+            self.next_state_ui[move] = [score_box, score_text, score_label, eval_box, eval_text, eval_label]
+            #self.next_state_ui[move] = [move_box, move_label]
         
         return panel
 
@@ -239,13 +250,26 @@ class View(tk.Frame, Publisher):
         self.score.set(self.game_state.get_score())
         self.best.set(max(self.score.get(), self.best.get()))
 
-        # Update ai panel variables
+        # Update control panel buttons
+        if self.ai_running:
+            self.ai_toggle_button.configure(bg=ENABLED_STANDARD_BUTTON, text='Disable AI')
+        else:
+            self.ai_toggle_button.configure(bg=DEFAULT_STANDARD_BUTTON, text='Enable AI')
+
+        # Update ai panel variables and ui
         for move in Move:
-            valid_var, evaluation_var, score_var = self.next_game_states[move]
+            # Update variables
+            valid_var, evaluation_var, score_var = self.next_state_vars[move]
             validity_str = 'valid' if self.game_state.valid_move(move) else 'invalid'
             valid_var.set(validity_str)
             evaluation_var.set(self.ai_state.evaluate_move(move))
             score_var.set(self.game_state.next_state(move).get_score())
+            # Update ui
+            for widget in self.next_state_ui[move]:
+                if valid_var.get().lower() == 'valid':
+                    widget.configure(bg=VALID_STATE_BOX)
+                elif valid_var.get().lower() == 'invalid':
+                    widget.configure(bg=INVALID_STATE_BOX)
 
         # Update canvases
         for canvas in self.canvas_map:
@@ -292,10 +316,10 @@ class View(tk.Frame, Publisher):
             canvas.create_text(canvas_size/2, canvas_size/2, fill=TITLE, font=title_font, text='GAME OVER')
 
 if __name__ == '__main__':
-    from ai import Dummy
+    from ai import DummyAI
     root = tk.Tk()
     game = GameState()
-    ai = Dummy(game)
+    ai = DummyAI(game)
 
     view = View(game, ai, root)
     view.mainloop()
