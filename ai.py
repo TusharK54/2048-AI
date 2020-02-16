@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from random import choice
 
 from game import Move, GameState
-from pub_sub import QueueManager
+from messaging import QueueHandler
 
 class BaseAI(ABC):
 

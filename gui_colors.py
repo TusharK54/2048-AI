@@ -1,4 +1,4 @@
-
+# Info panel colors
 INFO_BACKGROUND         = '#faf8ef'
 TITLE                   = '#453C33'
 SCORE_BOX               = '#bbada0'
@@ -9,9 +9,8 @@ DEFAULT_STANDARD_BUTTON = '#8f7a66'
 PRESSED_STANDARD_BUTTON = 'blue'
 ENABLED_STANDARD_BUTTON = 'brown'
 BUTTON_LABELS           = '#f9f6f2'
-TILE_GRID               = '#938578'
-GAME_OVER_STIPPLE       = '#eee4da'
 
+# Next-state panel colors
 STATES_BACKGROUND       = 'black'
 VALID_STATE_BOX         = 'green'
 INVALID_STATE_BOX       = 'red'
@@ -19,8 +18,12 @@ STATES_SCORE_BOX_TEXT   = SCORE_TITLE
 STATES_SCORE_BOX_VALUE  = BUTTON_LABELS
 STATES_SCORE_BOX        = SCORE_BOX
 
+# AI panel colors
 AI_BACKGROUND = 'blue'
 
+# Game Canvas colors
+TILE_GRID               = '#938578'
+GAME_OVER_STIPPLE       = '#eee4da'
 TILES = {}
 TILES['default']    = {'tile': '#3c3a32', 'text': '#f9f6f2'}
 TILES[str(0)]       = {'tile': '#bbada0', 'text': '#bbada0'}

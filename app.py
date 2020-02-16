@@ -3,16 +3,17 @@ import tkinter as tk
 from threading import Thread
 from time import sleep # TODO: remove
 
-from pub_sub import Publisher
+from messaging import PubSub
 
 from ai import BaseAI, DummyAI
 from game import Move, GameState
 from gui import View
 
-class KeyboardManager(Publisher):
+class KeyboardManager(PubSub):
+    """Captures keyboard presses and publishes them as events."""
 
     def __init__(self, master):
-        Publisher.__init__(self)
+        PubSub.__init__(self)
         master.bind('<Any-KeyPress>', self.keypress_handler)
 
     def handle_event(self, event, data):
@@ -32,10 +33,11 @@ class KeyboardManager(Publisher):
         elif symbol == 'd' or symbol == 'right':
             self.publish_event('keyboard move', Move.RIGHT)
 
-class GameManager(Publisher):
+class GameManager(PubSub):
+    """Contains and manages game state."""
 
     def __init__(self, game: GameState):
-        Publisher.__init__(self)
+        PubSub.__init__(self)
         self.game_state = game
 
     def handle_event(self, event, data):
@@ -43,24 +45,16 @@ class GameManager(Publisher):
             self.game_state = GameState(data)
             self.publish_event('new game', self.game_state)
         elif event == 'keyboard move':      # data contains move
-            self.make_move(data)
-            
+            if not self.game_state.game_over():
+                self.game_state.update_state(data)
         else:
             raise Exception
 
-    def make_move(self, move: Move):
-        if self.game_state.game_over():
-            return
-
-        self.game_state.update_state(move)
-        
-        if self.game_state.game_over():
-            pass
-
-class AIManager(Publisher):
+class AIManager(PubSub):
+    """Contains and manages AI state."""
 
     def __init__(self, ai: BaseAI):
-        Publisher.__init__(self)
+        PubSub.__init__(self)
         self.ai_state = ai
         self.running = False
 
@@ -74,8 +68,7 @@ class AIManager(Publisher):
         elif event == 'step ai':
             self.step()
         elif event == 'run':
-            self._run()
-
+            self.run()
         else:
             raise Exception
 
@@ -99,7 +92,7 @@ class AIManager(Publisher):
         if not self.ai_state.game_state.game_over():
             self.ai_state.make_move()
 
-    def _run(self):
+    def run(self):
        # sleep(100/1000)
         self.step()
         if self.ai_state.game_state.game_over():

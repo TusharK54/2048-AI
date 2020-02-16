@@ -1,7 +1,9 @@
 """
 This module contains all the components required implement a distributed system using a publisher/subscriber protocol or a simple message queue protocol.
 
-Any class that needs to implement a message queue should inherit the `QueueManager` class and define the `handle_event()` method. To launch the message queue handler, the class should call the `launch_queue()` method. This will immediately launch a worker thread to start handling events in the message queue. Since event handling might need to reference properties of the class, it is recommended to call `launch_queue()` as the last step of the subclass initialization, after all the other properties have been initialized.
+Any class that needs to implement a message queue should inherit the `QueueHandler` class and implement the `handle_event()` method as defined by its specification. To launch the message queue handler, the class should call the `launch_queue()` method. This will immediately launch a worker thread to start handling events in the message queue. Since event handling might need to reference properties of the class, it is recommended to call `launch_queue()` as the last step of the subclass initialization, after all the other properties have been initialized.
+
+Any class that needs to send and recieve events selectively should inherit the `PubSub` class. This allows the class to selectively subscribe to other `PubSub` objects using the `subscribe()` method, and publish events to their own subscribers using the `publush_event()` method. 
 """
 
 import json
@@ -15,22 +17,22 @@ class Message(object):
         self.event = event
         self.data = data
 
-    def get(self):
-        return self.event, self.data
-
     def __repr__(self):
-        return repr(self.event) + ', ' + repr(self.data)
+        s = repr(self.event)
+        if self.data is not None:
+            s += ', ' + repr(self.data)
+        return s
 
 class MessageQueue(Queue):
 
     def __init__(self):
         Queue.__init__(self)
 
-    def put(self, event, data):
-        """Add an event, optionally with some associated data, to the end of the queue."""
+    def put(self, event, data=None):
+        """Add an event with some associated data to the end of the queue."""
         super().put(Message(event, data))
 
-class QueueManager(ABC):
+class QueueHandler(ABC):
 
     def __init__(self):
         self.message_queue = MessageQueue()
@@ -62,29 +64,36 @@ class QueueManager(ABC):
         """Continually handle events from the message queue until `None` is encountered."""
         while True:
             try:
-                item = self.message_queue.get()
-                if item is None:
+                msg = self.message_queue.get()
+                if msg is None:
                     print(self.get_id(), 'is shutting down')
                     break
-                
-                event, data = item.get()
+                else:
+                    event, data = msg.event, msg.data
             except Exception:
-                print('--ERROR--', self.get_id(), 'skipping invalid item:', item)
+                print('--ERROR--', self.get_id(), 'skipping invalid item:', msg)
             else:
                 try:
                     self.handle_event(event, data)
                 except Exception:
-                    print(self.get_id(), 'skipped event:', item)
+                    print(self.get_id(), 'skipped event:', msg)
                 else:
-                    print(self.get_id(), 'handled event:', item)
+                    print(self.get_id(), 'handled event:', msg)
+                    # TODO use logs instead of printing
 
-class Publisher(QueueManager): # TODO: change name
+class PubSub(QueueHandler):
+
 
     def __init__(self):
-        QueueManager.__init__(self)
+        QueueHandler.__init__(self)
         self.subscribers = []
 
+    def subscribe(self, publisher):
+        """Subscribe to another `PubSub` object."""
+        publisher.add_subscriber(self)
+
     def publish_event(self, event, data=None):
+        """Send `event` and `data` to all subscribers."""
         for subscriber in self.subscribers:
             subscriber.queue(event, data)
 
@@ -93,6 +102,3 @@ class Publisher(QueueManager): # TODO: change name
 
     def remove_subscriber(self, subscriber):
         self.subscribers.remove(subscriber)
-
-    def subscribe(self, publisher):
-        publisher.add_subscriber(self)

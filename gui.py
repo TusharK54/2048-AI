@@ -6,15 +6,15 @@ from random import randint
 
 from game import Move, GameState
 from ai import BaseAI
-from pub_sub import Publisher
+from messaging import PubSub
 from gui_colors import *
 
-class View(tk.Frame, Publisher):
+class View(tk.Frame, PubSub):
 
     def __init__(self, game: GameState, ai: BaseAI, master=None, fps: int=15):
         # 1. Initialize superclasses
         tk.Frame.__init__(self, master)
-        Publisher.__init__(self)
+        PubSub.__init__(self)
 
         # 2a. Initialize game state game-dependent ui state
         self.game_state = game
@@ -83,7 +83,7 @@ class View(tk.Frame, Publisher):
 
     def launch_thread(self):
         """Launch the gui mainloop. NOTE: This launches a blocking thread!"""
-        Publisher.launch_thread(self)
+        PubSub.launch_thread(self)
         self.mainloop()
 
     def initialize_fonts(self):
