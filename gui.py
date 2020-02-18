@@ -6,7 +6,7 @@ from random import randint
 
 from game import Move, GameState
 from ai import BaseAI
-from messaging import PubSub
+from messaging import PubSub, UnknownEventError
 from gui_colors import *
 
 class View(tk.Frame, PubSub):
@@ -65,9 +65,8 @@ class View(tk.Frame, PubSub):
             self.ai_state = data
         elif event == 'toggle ai':  # data contains bool ai running
             self.ai_running = data
-
         else:
-            raise Exception
+            raise UnknownEventError
 
     def new_game_event(self):
         self.publish_event('restart', self.size.get())
@@ -82,21 +81,21 @@ class View(tk.Frame, PubSub):
             self.publish_event('start ai')
 
     def launch_thread(self):
-        """Launch the gui mainloop. NOTE: This launches a blocking thread!"""
+        """Launches the gui mainloop. NOTE: This launches a blocking thread!"""
         PubSub.launch_thread(self)
         self.mainloop()
 
     def initialize_fonts(self):
-        self.tile_font    = ('Slope Opera', 48, 'bold')       # size sets '2048' title
-        self.score_font       = ('Slope Opera', 20, 'bold')
+        self.tile_font      = ('Slope Opera', 48, 'bold')       # size sets '2048' title
+        self.score_font     = ('Slope Opera', 20, 'bold')
         self.splash_font    = ('Hysterix', .8, 'bold')         # size acts at multiplier
-        self.box_font = ('Hysterix', 12, '')
+        self.box_font       = ('Hysterix', 12, '')
         self.button_font    = ('Hysterix', 12, '')
         
-        self.state_move_font = ('Hysterix', 10, '')
-        self.state_valid_font = ('Arial', 10, 'bold')
-        self.state_score_font = ('Hysterix', 10, '')
-        self.state_box_font = ('Slope Opera', 10, 'bold')
+        self.state_move_font    = ('Hysterix', 10, '')
+        self.state_valid_font   = ('Arial', 10, 'bold')
+        self.state_score_font   = ('Hysterix', 10, '')
+        self.state_box_font     = ('Slope Opera', 10, 'bold')
 
 
     def create_control_panel(self, width: int, height: int) -> tk.Frame:

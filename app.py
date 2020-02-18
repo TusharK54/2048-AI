@@ -3,7 +3,7 @@ import tkinter as tk
 from threading import Thread
 from time import sleep # TODO: remove
 
-from messaging import PubSub
+from messaging import PubSub, UnknownEventError
 
 from ai import BaseAI, DummyAI
 from game import Move, GameState
@@ -17,7 +17,7 @@ class KeyboardManager(PubSub):
         master.bind('<Any-KeyPress>', self.keypress_handler)
 
     def handle_event(self, event, data):
-        raise Exception
+        raise UnknownEventError
 
     def keypress_handler(self, key):
         symbol = key.keysym.lower()
@@ -48,7 +48,7 @@ class GameManager(PubSub):
             if not self.game_state.game_over():
                 self.game_state.update_state(data)
         else:
-            raise Exception
+            raise UnknownEventError
 
 class AIManager(PubSub):
     """Contains and manages AI state."""
@@ -70,7 +70,7 @@ class AIManager(PubSub):
         elif event == 'run':
             self.run()
         else:
-            raise Exception
+            raise UnknownEventError
 
     def new_game(self, game: GameState):
         self.stop()
