@@ -62,3 +62,5 @@ There really are no limits to the creativity involved in writing an evaluation f
 
 ##### Search Tree Pruning
 The primary limiting factor preventing the AI from playing a perfect game every game is the depth of its search tree. As of right now, I've found a depth of 4 to be ideal in terms of both speed and performance. A shorter search tree will run much faster but achieve much lower scores, while a longer one will play much better but take much longer to process. The reason for this is because each additional layer is about 4 times larger than the previous layer. Thus the tree grows exponentially, with each layer at a depth of *n* containing roughly 4<sup>*n*</sup> nodes. If we could add layers to the tree without significantly increasing the size of each layer, we would be able to create a better AI that can 'see' more moves ahead without compromising on speed. This is where pruning comes in. 
+
+**UNFINISHED**
